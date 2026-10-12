@@ -1,0 +1,13 @@
+{
+  "name": "Event signup lifecycle",
+  "steps": [
+    { "name": "event-create", "actor": "moderator", "args": { "title": "Reading group", "capacity": 1 }, "expect": { "eventCount": 1, "participantCount": 0, "clean": true } },
+    { "name": "event:join:event-1", "kind": "button", "expect": { "event": "deferUpdate", "participantCount": 1, "clean": true } },
+    { "name": "event:join:event-1", "kind": "button", "expect": { "participantCount": 1, "clean": true } },
+    { "name": "event-join", "actor": "stranger", "args": { "event": "event-1" }, "expect": { "code": "GW_EVENT_FULL", "participantCount": 1 } },
+    { "name": "event-leave", "args": { "event": "event-1" }, "expect": { "participantCount": 0, "clean": true } },
+    { "name": "event-join", "actor": "stranger", "args": { "event": "event-1" }, "expect": { "participantCount": 1, "clean": true } },
+    { "name": "event:close:event-1", "kind": "button", "expect": { "code": "GW_PERMISSION_DENIED", "eventStatus": "open" } },
+    { "name": "event-close", "actor": "moderator", "args": { "event": "event-1" }, "expect": { "eventStatus": "closed", "participantCount": 1, "clean": true } }
+  ]
+}

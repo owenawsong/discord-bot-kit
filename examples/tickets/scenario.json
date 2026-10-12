@@ -1,0 +1,9 @@
+{
+  "name": "Private ticket lifecycle",
+  "steps": [
+    { "name": "ticket", "expect": { "event": "modal", "clean": true } },
+    { "name": "ticket:create", "kind": "modal", "fields": { "topic": "I need help" }, "expect": { "ticketCount": 1, "ticketStatus": "open", "clean": true } },
+    { "name": "ticket:close:ticket-1", "kind": "button", "actor": "stranger", "expect": { "code": "GW_PERMISSION_DENIED", "ticketStatus": "open" } },
+    { "name": "close-ticket", "actor": "moderator", "channelId": "channel-ticket-1", "expect": { "ticketStatus": "closed", "clean": true } }
+  ]
+}

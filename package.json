@@ -1,0 +1,22 @@
+{
+  "name": "@owenawsong/guildwright",
+  "version": "0.1.0",
+  "description": "A local workshop for coding agents that build Discord bots: simulate, diagnose, test, then deploy.",
+  "type": "module",
+  "engines": { "node": ">=22.12" },
+  "bin": { "guildwright": "dist/src/cli.js" },
+  "exports": { ".": "./dist/src/index.js", "./discord": "./dist/src/discord.js" },
+  "types": "./dist/src/index.d.ts",
+  "files": ["dist/src", "src", "public", "skills", "docs", "assets", "examples", "LICENSE", "README.md", "CONTRIBUTING.md", "SECURITY.md", "CHANGELOG.md"],
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run build && node --test dist/test/*.test.js",
+    "dev": "npm run build && node dist/src/cli.js playground",
+    "check": "npm run test && node dist/src/cli.js test --json && node dist/src/cli.js test --recipe signups --json",
+    "prepack": "npm run build"
+  },
+  "dependencies": { "discord.js": "^14.22.1" },
+  "devDependencies": { "@types/node": "^22.18.0", "typescript": "^5.9.2" },
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/owenawsong/Guildwright.git" }
+}
