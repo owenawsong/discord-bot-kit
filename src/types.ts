@@ -1,30 +1,185 @@
-export type Permission = 'ManageChannels' | 'ManageGuild' | 'SendMessages' | 'ViewChannel';
-export interface Actor { id: string; name: string; permissions: Permission[] }
-export interface Input {
-  id: string; kind: 'command' | 'button' | 'modal' | 'select'; name: string;
-  actor: Actor; guildId?: string; channelId?: string; fields?: Record<string,string>;
-  values?: string[]; ageMs?: number;
-  args?: Record<string,string|number|boolean>;
+export type Permission = import("discord.js").PermissionsString;
+export interface Actor {
+  id: string;
+  name: string;
+  permissions: Permission[];
 }
-export interface Button { id: string; label: string; style?: 'primary' | 'danger' | 'secondary' }
-export interface Select { id: string; placeholder: string; options: {label:string;value:string}[] }
-export interface Message { content: string; ephemeral?: boolean; buttons?: Button[]; select?: Select }
-export interface Modal { id:string; title:string; fields:{id:string;label:string;maxLength?:number}[] }
-export interface Event { type: 'reply' | 'defer' | 'deferUpdate' | 'edit' | 'followup' | 'modal' | 'effect'; data: unknown; at: number }
-export interface Diagnostic { code: string; severity: 'error' | 'warning'; message: string; remedy: string }
+export interface Input {
+  id: string;
+  kind: "command" | "button" | "modal" | "select";
+  name: string;
+  actor: Actor;
+  guildId?: string;
+  channelId?: string;
+  fields?: Record<string, string>;
+  values?: string[];
+  ageMs?: number;
+  args?: Record<string, string | number | boolean>;
+}
+export interface Button {
+  id: string;
+  label: string;
+  style?: "primary" | "danger" | "secondary";
+}
+export interface Select {
+  id: string;
+  placeholder: string;
+  options: { label: string; value: string }[];
+}
+export interface Embed {
+  title?: string;
+  description?: string;
+  url?: string;
+  color?: number;
+  fields?: { name: string; value: string; inline?: boolean }[];
+  footer?: { text: string };
+  author?: { name: string; url?: string; iconURL?: string };
+  thumbnail?: { url: string };
+  image?: { url: string };
+  timestamp?: string;
+}
+export interface Message {
+  content?: string;
+  ephemeral?: boolean;
+  buttons?: Button[];
+  select?: Select;
+  embeds?: Embed[];
+}
+export interface Modal {
+  id: string;
+  title: string;
+  fields: { id: string; label: string; maxLength?: number }[];
+}
+export interface Event {
+  type:
+    | "reply"
+    | "defer"
+    | "deferUpdate"
+    | "edit"
+    | "followup"
+    | "modal"
+    | "effect";
+  data: unknown;
+  at: number;
+}
+export interface Diagnostic {
+  code: string;
+  severity: "error" | "warning";
+  message: string;
+  remedy: string;
+}
 export interface Port {
-  send(type: Event['type'], data: unknown): Promise<void>;
+  send(type: Event["type"], data: unknown): Promise<void>;
   createTicket(ticket: Ticket): Promise<string>;
   closeTicket(ticket: Ticket): Promise<void>;
 }
-export interface Ticket { id:string; guildId:string; owner:string; topic:string; channelId?:string; status:'provisioning'|'open'|'closing'|'closed'; createdAt:string }
-export interface SignupEvent { id:string;guildId:string;owner:string;title:string;capacity:number;participants:string[];status:'open'|'closed';createdAt:string }
-export interface State { version:1; tickets:Ticket[]; nextTicket:number; events:SignupEvent[];nextEvent:number }
-export interface Execution { input:Input; events:Event[]; diagnostics:Diagnostic[]; elapsedMs:number; state:State }
-export interface CommandOption {
-  name:string;description:string;type:'string'|'number'|'integer'|'boolean'|'user'|'channel';required?:boolean;
-  choices?:{name:string;value:string|number}[];min?:number;max?:number;minLength?:number;maxLength?:number;
+export interface Ticket {
+  id: string;
+  guildId: string;
+  owner: string;
+  topic: string;
+  channelId?: string;
+  status: "provisioning" | "open" | "closing" | "closed";
+  createdAt: string;
 }
-export interface Command { name:string; description:string; permission?:Permission; options?:CommandOption[];handler:(ctx: import('./core.js').Context)=>Promise<void> }
-export interface Route { prefix:string; kind:'button'|'modal'|'select'; permission?:Permission; handler:(ctx:import('./core.js').Context)=>Promise<void> }
-export interface Bot { name:string;recipe?:'tickets'|'signups';commands:Command[]; routes:Route[] }
+export interface SignupEvent {
+  id: string;
+  guildId: string;
+  owner: string;
+  title: string;
+  capacity: number;
+  participants: string[];
+  status: "open" | "closed";
+  createdAt: string;
+}
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue };
+export interface NamespaceSchema<T = unknown> {
+  name: string;
+  version: number;
+  initial: T;
+  validate: (value: unknown) => boolean;
+}
+export interface NamespaceState {
+  version: number;
+  global?: JsonValue;
+  guilds: Record<string, JsonValue>;
+}
+export interface State {
+  version: 1;
+  tickets: Ticket[];
+  nextTicket: number;
+  events: SignupEvent[];
+  nextEvent: number;
+  namespaces: Record<string, NamespaceState>;
+}
+export interface SimulationFault {
+  send?: Event["type"];
+  createTicket?: "before" | "after";
+  closeTicket?: "before" | "after";
+  delaySendMs?: number;
+}
+export interface Execution {
+  input: Input;
+  events: Event[];
+  diagnostics: Diagnostic[];
+  elapsedMs: number;
+  state: State;
+  simulation?: {
+    channels: Record<string, Ticket & { archived?: boolean }>;
+    faults?: SimulationFault;
+  };
+}
+export interface CommandOption {
+  name: string;
+  description: string;
+  type: "string" | "number" | "integer" | "boolean" | "user" | "channel";
+  required?: boolean;
+  choices?: { name: string; value: string | number }[];
+  min?: number;
+  max?: number;
+  minLength?: number;
+  maxLength?: number;
+  autocomplete?: boolean;
+}
+export interface AutocompleteInput {
+  name: string;
+  option: string;
+  value: string | number;
+  actor: Actor;
+  guildId?: string;
+  args?: Input["args"];
+  ageMs?: number;
+}
+export interface Suggestion {
+  name: string;
+  value: string | number;
+}
+export interface Command {
+  name: string;
+  description: string;
+  permission?: Permission;
+  options?: CommandOption[];
+  handler: (ctx: import("./core.js").Context) => Promise<void>;
+  autocomplete?: (
+    ctx: import("./autocomplete.js").AutocompleteContext,
+  ) => Promise<Suggestion[]>;
+}
+export interface Route {
+  prefix: string;
+  kind: "button" | "modal" | "select";
+  permission?: Permission;
+  handler: (ctx: import("./core.js").Context) => Promise<void>;
+}
+export interface Bot {
+  name: string;
+  recipe?: "tickets" | "signups" | "polls";
+  commands: Command[];
+  routes: Route[];
+  stateSchemas?: NamespaceSchema[];
+}

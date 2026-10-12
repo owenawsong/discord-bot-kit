@@ -1,2 +1,2 @@
-import { ticketBot } from '@owenawsong/guildwright';
+import { ticketBot } from "@owenawsong/guildwright";
 export default ticketBot();

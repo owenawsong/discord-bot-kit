@@ -1,20 +1,386 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Guildwright: build Discord bots with your coding agent, and prove their behavior in a local workshop."><title>Guildwright / Bot workshop</title><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script></head>
-<body>
-<header class="masthead"><a class="brand" href="/" aria-label="Guildwright home"><span class="mark" aria-hidden="true">g<span>↗</span></span>guildwright<span class="version">WORKSHOP / 0.1</span></a><div class="local"><span class="dot"></span> LOCAL SIMULATION<span class="live-note">No Discord connection</span></div></header>
-<main>
-<section class="intro"><div><p class="eyebrow">THE AGENT'S BOT WORKSHOP</p><h1>Build the bot.<br><em>Prove the behavior.</em></h1><p class="lede">Run your actual handlers. Open tickets, switch roles, break the happy path.<br>Every interaction leaves evidence your coding agent can use.</p></div><div class="intro-index"><span>01 / INTERACT</span><span>02 / INSPECT</span><span>03 / SHIP</span><p>Same handlers.<br>Two environments.<br>One less guess.</p></div></section>
-<nav class="view-tabs" aria-label="Workshop views"><button class="active" data-view="workshop" aria-selected="true">Interaction lab <span>01</span></button><button data-view="scenarios" aria-selected="false">Scenario runner <span>02</span></button><button data-view="launch" aria-selected="false">Launch checklist <span>03</span></button></nav>
-<div id="status" role="status" aria-live="polite"></div>
-<section id="workshop-view" class="view">
-<div class="workbench">
-<aside class="rail"><p class="eyebrow">WORKSPACE</p><h2 id="bot-name">Workshop bot</h2><p class="rail-label">COMMANDS</p><div id="commands" class="commands"></div><div class="rail-foot" id="recipe-guide"><p>Start with <strong>/ticket</strong>.</p><p>Submit the modal, then switch to <strong>Rowan</strong> and try closing Mira's ticket.</p><span class="mini-label">AUTHORIZATION IS PART OF THE FEATURE.</span></div></aside>
-<div class="conversation"><div class="channel-head"><span><span class="hash">#</span> interaction-lab</span><span class="session-label">ISOLATED SESSION</span></div><div class="actor-bar"><label for="actor">Act as</label><select id="actor"><option value="member">Mira / Member</option><option value="stranger">Rowan / Other member</option><option value="moderator">Alex / Moderator</option></select><label for="latency">Arrival</label><select id="latency"><option value="0">On time</option><option value="3001">Already expired</option></select><label for="channel">Channel</label><select id="channel"><option value="lobby">Lobby</option></select><label class="dm-toggle"><input type="checkbox" id="dm"> DM</label></div><div id="messages" class="messages" aria-live="polite"><div class="empty"><span class="empty-glyph" aria-hidden="true">/</span><h3>The useful part starts<br>after the first command.</h3><p>Choose a command on the left. Responses here come from your bot's real handlers, through a simulated transport.</p><button class="primary" id="first-ticket">Open a ticket ↗</button></div></div><div class="composer"><span>/</span><input id="command-input" aria-label="Slash command" placeholder="Choose a command" autocomplete="off"><button id="send-command" class="primary">Run ↵</button></div></div>
-<aside class="inspector"><div class="inspector-title"><h2>Evidence</h2><span id="run-count">0 RUNS</span></div><section><p class="eyebrow">LAST INTERACTION</p><div id="diagnostics"><p class="muted">Run a command to inspect its lifecycle and diagnostics.</p></div></section><section id="ticket-state"><div class="section-label"><p class="eyebrow">TICKET STATE</p><span id="ticket-count">0 tickets</span></div><div id="tickets"><p class="muted">Nothing reserved yet.</p></div></section><section id="event-state"><div class="section-label"><p class="eyebrow">SIGNUP STATE</p><span id="event-count">0 events</span></div><div id="events"><p class="muted">No signup events yet.</p></div></section><details class="raw"><summary>Inspect execution JSON</summary><pre id="raw-output">{}</pre></details><div class="inspector-actions"><button id="export" class="subtle">Export evidence ↓</button><button id="reset" class="subtle">Reset simulation</button></div><p class="inspector-note">No gateway, network timing, or server permission-overwrite emulation. Finish with a real test guild.</p></aside>
-</div></section>
-<section id="scenarios-view" class="view hidden"><div class="section-intro"><div><p class="eyebrow">REPEATABLE EVIDENCE</p><h2>The happy path is<br>only the beginning.</h2><p id="scenario-description">Isolated checks exercise the selected recipe and the interaction lifecycle. Your workshop session stays intact.</p></div><button class="primary" id="run-tests">Run all scenarios ↗</button></div><div id="test-results" class="test-results"><p class="muted">Run the suite to see the actual outcomes.</p></div><div class="scenario-foot"><div><h3>Bring your own scenarios.</h3><p>Check replies, diagnostic codes, event types and durable state with a small JSON file.</p></div><pre>guildwright test --bot bot.mjs<br>  --scenario scenario.json --json</pre></div></section>
-<section id="launch-view" class="view hidden"><div class="section-intro"><div><p class="eyebrow">FROM WORKSHOP TO SERVER</p><h2>Ship with evidence.<br>Keep your secrets local.</h2><p>The simulator needs no bot token. A live deployment uses your Discord application, a test guild, and the same handlers.</p></div><span class="launch-number">03</span></div><ol class="launch-steps"><li><span>01</span><div><h3>Create the application.</h3><p>In the Discord Developer Portal, create an application and bot. Install it in a dedicated test server with bot and applications.commands scopes.</p><a href="https://discord.com/developers/applications" target="_blank" rel="noreferrer">Open Developer Portal ↗</a></div></li><li><span>02</span><div><h3>Configure recipe permissions.</h3><p>The ticket recipe needs View Channel, Send Messages, Read Message History, Manage Channels and Manage Roles. Grant only those. Create a dedicated support role (not @everyone) and record its ID. Signup bots only need View Channel and Send Messages.</p></div></li><li><span>03</span><div><h3>Check the local environment.</h3><p>Copy .env.example to .env and add your bot token, application ID, test guild ID and, for tickets, support role ID. Keep .env out of Git.</p><code>guildwright doctor</code></div></li><li><span>04</span><div><h3>Preview before registering.</h3><p>Inspect the command manifest first. Applying replaces this application's command list in the configured test guild.</p><code>guildwright register --bot bot.mjs</code><code>guildwright register --bot bot.mjs --apply</code></div></li><li><span>05</span><div><h3>Verify in Discord.</h3><p>Start the bot, exercise tickets with two real members and a moderator, restart it, and verify the archived channel's permissions. Run one bot process per state file.</p><code>guildwright start --bot bot.mjs</code></div></li></ol><p class="launch-warning">The local suite is development evidence, not proof of production readiness. Check your actual server permissions, network failures and deployment before inviting users.</p></section>
-</main><footer><span>guildwright / BUILT FOR THE PART AFTER GENERATION.</span><span>LOCAL FIRST · AGENT FRIENDLY · MIT</span></footer>
-<dialog id="modal-dialog"><form id="modal-form"><p class="eyebrow">MODAL INTERACTION</p><h2 id="modal-title">Open a support ticket</h2><div id="modal-fields"></div><div class="dialog-actions"><button type="button" id="cancel-modal" class="subtle">Cancel</button><button type="submit" class="primary">Submit ↗</button></div></form></dialog>
-<dialog id="args-dialog"><form id="args-form"><p class="eyebrow">SLASH COMMAND OPTIONS</p><h2 id="args-title">Command arguments</h2><p id="args-description" class="muted"></p><div id="args-fields"></div><div class="dialog-actions"><button type="button" id="cancel-args" class="subtle">Cancel</button><button type="submit" class="primary">Run command ↗</button></div></form></dialog>
-</body></html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Guildwright · Bot workspace</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip" href="#workspace">Skip to workspace</a>
+    <header class="masthead">
+      <a class="brand" href="/">▤ Guildwright</a
+      ><span class="version">BOT DEVTOOLS / 0.2</span>
+      <div class="local"><i></i>Local simulator</div>
+      <a href="https://github.com/owenawsong/Guildwright" class="source-link"
+        >Source ↗</a
+      >
+    </header>
+    <main id="workspace">
+      <div class="workspace-heading">
+        <div>
+          <span class="eyebrow">YOUR WORKSPACE</span>
+          <h1 id="bot-name">Connecting to your bot…</h1>
+          <p id="workspace-description">
+            Interactive handler preview, executable scenarios and state
+            inspection.
+          </p>
+        </div>
+        <div class="heading-actions">
+          <button id="export" class="secondary">Export session</button
+          ><button id="reset" class="quiet">Reset session</button>
+        </div>
+      </div>
+      <nav class="view-tabs" aria-label="Workspace views">
+        <button class="active" data-view="workshop" aria-selected="true">
+          Interact</button
+        ><button data-view="scenarios" aria-selected="false">
+          Test scenarios <span id="test-tab-count"></span></button
+        ><button data-view="contract" aria-selected="false">Bot contract</button
+        ><button data-view="launch" aria-selected="false">
+          Connect to Discord
+        </button>
+      </nav>
+      <div id="status" role="status" aria-live="polite"></div>
+      <section id="workshop-view" class="view">
+        <div class="workbench">
+          <aside class="rail">
+            <div class="rail-heading">
+              <h2>Commands</h2>
+              <span id="command-count"></span>
+            </div>
+            <label class="search-label" for="command-search"
+              >Find a command</label
+            ><input
+              id="command-search"
+              type="search"
+              placeholder="Search commands…"
+            />
+            <div id="commands" class="commands"></div>
+            <div id="recipe-guide" class="recipe-guide"></div>
+            <button id="first-ticket" class="primary">
+              Try the first command
+            </button>
+            <div class="fidelity-note">
+              <strong>What this tests</strong>
+              <p>
+                Actual handlers, response lifecycle and simulated state. Server
+                permissions and network behavior need a real test guild.
+              </p>
+            </div>
+          </aside>
+          <div class="conversation">
+            <div class="channel-head">
+              <span><b>#</b> bot-preview</span
+              ><span class="tag">SIMULATED DISCORD</span>
+            </div>
+            <div class="actor-bar">
+              <label
+                >Member<select id="actor">
+                  <option value="member">Mira · Member</option>
+                  <option value="stranger">Rowan · Other member</option>
+                  <option value="moderator">Alex · Moderator</option>
+                </select></label
+              ><label
+                >Arrival<select id="latency">
+                  <option value="0">On time</option>
+                  <option value="3001">Expired · 3.001s</option>
+                </select></label
+              ><label
+                >Channel<select id="channel">
+                  <option value="lobby">Lobby</option>
+                </select></label
+              ><label class="dm-toggle"
+                ><input type="checkbox" id="dm" />Direct message</label
+              >
+            </div>
+            <div id="messages" class="messages" aria-live="polite">
+              <div class="empty">
+                <div class="empty-icon">/</div>
+                <h2>Your bot, with a safe place to break it.</h2>
+                <p>
+                  Choose a command. Change who invokes it. Inspect the response
+                  and exactly what state changed.
+                </p>
+                <div class="empty-steps">
+                  <span>1. Run a command</span><span>2. Inspect the trace</span
+                  ><span>3. Keep it as a test</span>
+                </div>
+              </div>
+            </div>
+            <div class="composer">
+              <span>/</span
+              ><input
+                id="command-input"
+                aria-label="Slash command"
+                placeholder="Command name"
+                autocomplete="off"
+              /><button id="send-command" class="primary">Run</button>
+            </div>
+          </div>
+          <aside class="inspector">
+            <div class="inspector-title">
+              <h2>Execution inspector</h2>
+              <span id="run-count">0</span>
+            </div>
+            <div class="inspector-tabs">
+              <button class="active" data-inspect="trace">Trace</button
+              ><button data-inspect="state">State</button
+              ><button data-inspect="history">History</button>
+            </div>
+            <div id="trace-inspect" class="inspect-view">
+              <div id="diagnostics">
+                <p class="muted">The next interaction will appear here.</p>
+              </div>
+              <div id="lifecycle" class="lifecycle"></div>
+              <h3 class="section-label">State changes</h3>
+              <div id="state-diff">
+                <p class="muted">No execution selected.</p>
+              </div>
+              <details class="raw">
+                <summary>Complete execution JSON</summary>
+                <pre id="raw-output">{}</pre>
+              </details>
+            </div>
+            <div id="state-inspect" class="inspect-view hidden">
+              <div id="ticket-state">
+                <div class="section-label">
+                  Tickets <span id="ticket-count"></span>
+                </div>
+                <div id="tickets"></div>
+              </div>
+              <div id="event-state">
+                <div class="section-label">
+                  Signups <span id="event-count"></span>
+                </div>
+                <div id="events"></div>
+              </div>
+              <div id="namespace-state">
+                <div class="section-label">Custom namespaces</div>
+                <div id="namespaces"></div>
+              </div>
+              <details class="raw">
+                <summary>Complete state JSON</summary>
+                <pre id="state-output">{}</pre>
+              </details>
+            </div>
+            <div id="history-inspect" class="inspect-view hidden">
+              <div id="execution-history"></div>
+            </div>
+            <div class="inspector-bottom">
+              <button id="capture-scenario" class="secondary">
+                Turn session into a test
+              </button>
+              <p id="capture-note" class="muted">
+                Capture after running an interaction.
+              </p>
+            </div>
+          </aside>
+        </div>
+      </section>
+      <section id="scenarios-view" class="view hidden">
+        <div class="scenario-heading">
+          <div>
+            <h2>Reproduce the behavior.</h2>
+            <p>
+              Run the recipe checks, or define a scenario for your own bot. Each
+              test starts in an isolated simulator.
+            </p>
+          </div>
+          <button id="run-tests" class="primary">Run recipe suite</button>
+        </div>
+        <div class="scenario-workspace">
+          <aside class="scenario-editor">
+            <h3>Custom scenario</h3>
+            <label for="scenario-json">Scenario JSON</label
+            ><textarea id="scenario-json" spellcheck="false"></textarea>
+            <div class="editor-actions">
+              <button id="run-custom" class="primary">Run scenario</button
+              ><label class="file-button"
+                >Import JSON<input
+                  id="import-scenario"
+                  type="file"
+                  accept=".json,application/json" /></label
+              ><button id="save-scenario" class="quiet">Save JSON</button>
+            </div>
+            <p id="scenario-error" role="alert"></p>
+            <details>
+              <summary>Writing a useful assertion</summary>
+              <p>
+                Assert the reply, expected diagnostic and exact state. A clean
+                response alone does not prove authorization or a business rule.
+              </p>
+              <pre>
+guildwright test --bot bot.mjs
+  --scenario scenario.json --json</pre>
+            </details>
+          </aside>
+          <div>
+            <div class="test-summary" id="test-summary">
+              <strong>No results yet</strong
+              ><span>Run a suite or custom scenario.</span>
+            </div>
+            <div id="test-results" class="test-results"></div>
+            <div id="custom-trace" class="custom-trace hidden">
+              <h3>Scenario evidence</h3>
+              <pre id="custom-output"></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="contract-view" class="view hidden">
+        <div class="scenario-heading">
+          <div>
+            <h2>The contract your agent can inspect.</h2>
+            <p>
+              Commands, routes and declared state schemas are read from the
+              loaded bot.
+            </p>
+          </div>
+          <button id="export-contract" class="secondary">
+            Export contract
+          </button>
+        </div>
+        <div class="contract-grid">
+          <section>
+            <h3>Slash commands</h3>
+            <div id="contract-commands"></div>
+          </section>
+          <section>
+            <h3>Component routes</h3>
+            <div id="contract-routes"></div>
+            <h3>State namespaces</h3>
+            <div id="contract-state"></div>
+          </section>
+        </div>
+        <section class="agent-loop">
+          <h3>Give your coding agent a reproducible loop.</h3>
+          <ol>
+            <li>Inspect the contract and declared state.</li>
+            <li>Implement the shared handler.</li>
+            <li>Assert success and rejection in a scenario.</li>
+            <li>Run it; inspect the trace when it fails.</li>
+          </ol>
+          <pre>
+guildwright inspect --bot bot.mjs
+guildwright test --bot bot.mjs --scenario scenario.json --json
+guildwright mcp --bot bot.mjs</pre>
+          <a
+            href="https://github.com/owenawsong/Guildwright/tree/main/skills/guildwright"
+            >Agent instructions and MCP setup ↗</a
+          >
+        </section>
+      </section>
+      <section id="launch-view" class="view hidden">
+        <div class="scenario-heading">
+          <div>
+            <h2>Verify the same bot in Discord.</h2>
+            <p>
+              The local workspace does not need a token. The gateway adapter
+              uses your application and a dedicated test guild.
+            </p>
+          </div>
+          <span class="tag">EXTERNAL VERIFICATION</span>
+        </div>
+        <ol class="launch-steps">
+          <li>
+            <span>01</span>
+            <div>
+              <h3>Create an application and test guild</h3>
+              <p>Install with bot and applications.commands scopes.</p>
+              <a
+                href="https://discord.com/developers/applications"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Discord Developer Portal ↗</a
+              >
+            </div>
+          </li>
+          <li>
+            <span>02</span>
+            <div>
+              <h3>Configure the needed permissions</h3>
+              <p>
+                Tickets need View Channel, Send Messages, Read Message History,
+                Manage Channels and Manage Roles, plus a dedicated support role.
+                Signups need View Channel and Send Messages.
+              </p>
+            </div>
+          </li>
+          <li>
+            <span>03</span>
+            <div>
+              <h3>Inspect configuration and commands</h3>
+              <p>
+                Keep the token in .env. Preview before replacing your
+                application's test-guild command list.
+              </p>
+              <pre>
+guildwright doctor --bot bot.mjs
+guildwright register --bot bot.mjs
+guildwright register --bot bot.mjs --apply</pre>
+            </div>
+          </li>
+          <li>
+            <span>04</span>
+            <div>
+              <h3>Check permissions and restart recovery</h3>
+              <p>
+                Use two members and a moderator. Inspect actual channel access,
+                ownership and durable state after restarting.
+              </p>
+              <pre>guildwright start --bot bot.mjs</pre>
+            </div>
+          </li>
+        </ol>
+        <p class="fidelity-note">
+          Gateway rendering, API permissions, rate limits and transport failures
+          require real-guild evidence.
+        </p>
+      </section>
+      <section class="replay-panel">
+        <h2>Reproduce an exported session.</h2>
+        <p>
+          Replay recorded interactions in a separate simulator. Your current
+          workspace state stays intact.
+        </p>
+        <label class="file-button"
+          >Import session evidence<input
+            id="import-evidence"
+            type="file"
+            accept=".json,application/json"
+        /></label>
+        <p id="replay-status" role="status"></p>
+        <details id="replay-details" hidden>
+          <summary>Replay results and bot fingerprints</summary>
+          <pre id="replay-output"></pre>
+        </details>
+      </section>
+    </main>
+    <footer>Guildwright · Shared handlers, inspectable behavior · MIT</footer>
+    <dialog id="modal-dialog">
+      <form id="modal-form">
+        <span class="eyebrow">DISCORD MODAL</span>
+        <h2 id="modal-title"></h2>
+        <div id="modal-fields"></div>
+        <div class="dialog-actions">
+          <button type="button" id="cancel-modal" class="quiet">Cancel</button
+          ><button type="submit" class="primary">Submit</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="args-dialog">
+      <form id="args-form">
+        <span class="eyebrow">SLASH COMMAND</span>
+        <h2 id="args-title"></h2>
+        <p id="args-description" class="muted"></p>
+        <div id="args-fields"></div>
+        <div class="dialog-actions">
+          <button type="button" id="cancel-args" class="quiet">Cancel</button
+          ><button type="submit" class="primary">Run command</button>
+        </div>
+      </form>
+    </dialog>
+  </body>
+</html>

@@ -1,0 +1,105 @@
+{
+  "name": "Versioned poll namespace and captured interactions",
+  "steps": [
+    {
+      "label": "Create a persistent poll",
+      "name": "poll create",
+      "args": {
+        "question": "What should we play next?",
+        "answers": "Jazz | Ambient | Pop"
+      },
+      "saveAs": "created",
+      "expect": {
+        "clean": true,
+        "exact": {
+          "/state/namespaces/polls/version": 1,
+          "/state/namespaces/polls/guilds/workshop-guild/polls/poll-1/options": [
+            "Jazz",
+            "Ambient",
+            "Pop"
+          ]
+        }
+      }
+    },
+    {
+      "label": "Captured component ID",
+      "name": "poll:vote:${created#/events/1/data/data/pollId}",
+      "kind": "select",
+      "values": ["0"],
+      "saveAs": "voted",
+      "expect": {
+        "clean": true,
+        "exact": {
+          "/state/namespaces/polls/guilds/workshop-guild/polls/poll-1/votes": {
+            "member-1": 0
+          }
+        }
+      }
+    },
+    {
+      "label": "Replay a duplicate vote",
+      "replay": "voted",
+      "expect": {
+        "clean": true,
+        "exact": {
+          "/state/namespaces/polls/guilds/workshop-guild/polls/poll-1/votes": {
+            "member-1": 0
+          }
+        }
+      }
+    },
+    {
+      "label": "Two members vote concurrently",
+      "parallel": [
+        {
+          "name": "poll vote",
+          "args": { "poll": "poll-1", "answer": 2 },
+          "expect": { "clean": true }
+        },
+        {
+          "name": "poll vote",
+          "actor": "stranger",
+          "args": { "poll": "poll-1", "answer": 1 },
+          "expect": { "clean": true }
+        }
+      ],
+      "expect": {
+        "clean": true,
+        "exact": {
+          "/state/namespaces/polls/guilds/workshop-guild/polls/poll-1/votes": {
+            "member-1": 1,
+            "member-2": 0
+          }
+        }
+      }
+    },
+    {
+      "label": "Another member cannot close it",
+      "name": "poll close",
+      "actor": "stranger",
+      "args": { "poll": "poll-1" },
+      "expect": {
+        "code": "GW_PERMISSION_DENIED",
+        "exact": {
+          "/state/namespaces/polls/guilds/workshop-guild/polls/poll-1/closed": false
+        }
+      }
+    },
+    {
+      "label": "Owner closes the poll",
+      "name": "poll close",
+      "args": { "poll": "poll-1" },
+      "expect": {
+        "clean": true,
+        "exact": {
+          "/state/namespaces/polls/guilds/workshop-guild/polls/poll-1/closed": true
+        }
+      }
+    },
+    {
+      "label": "Stale component is rejected",
+      "replay": "voted",
+      "expect": { "code": "GW_POLL_CLOSED" }
+    }
+  ]
+}

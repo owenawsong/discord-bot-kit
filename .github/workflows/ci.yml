@@ -19,6 +19,7 @@ jobs:
       - run: npm test
       - run: node dist/src/cli.js test --json
       - run: node dist/src/cli.js test --recipe signups --json
+      - run: node dist/src/cli.js test --recipe polls --json
       - run: npm pack --dry-run
       - run: node dist/src/cli.js init smoke-bot
       - run: npm install
@@ -30,3 +31,10 @@ jobs:
         working-directory: smoke-signups
       - run: npm test
         working-directory: smoke-signups
+      - run: node dist/src/cli.js init smoke-polls --recipe polls
+      - run: npm install
+        working-directory: smoke-polls
+      - run: npm test
+        working-directory: smoke-polls
+      - run: npm run doctor -- --local
+        working-directory: smoke-polls

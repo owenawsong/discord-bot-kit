@@ -1,2 +1,2 @@
-import { signupBot } from '@owenawsong/guildwright';
+import { signupBot } from "@owenawsong/guildwright";
 export default signupBot();

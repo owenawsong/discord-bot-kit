@@ -10,6 +10,8 @@ For the ticket recipe grant View Channel, Send Messages, Read Message History, M
 
 The signup recipe only needs View Channel and Send Messages for interaction messages. It does not create channels or edit permission overwrites and does not require a support-role ID. The caller creating/closing managed events uses Manage Guild; the bot does not need that permission to perform those checks.
 
+The poll recipe also only needs View Channel and Send Messages. It uses slash subcommands, embeds, autocomplete and select menus against a versioned guild namespace. See [poll verification](POLLS.md). `doctor --local` validates contracts and existing state without credentials; normal doctor additionally checks configuration shapes, never token validity.
+
 ## 2. Configure locally
 
 Copy `.env.example` to `.env` in your scaffolded bot directory:

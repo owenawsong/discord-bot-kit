@@ -1,31 +1,304 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { defineBot, Fault } from '../src/core.js';
-import { Store } from '../src/store.js';
-import { input, actors, Simulator } from '../src/simulate.js';
-import { ticketBot } from '../src/recipes.js';
-import { runScenarios } from '../src/scenarios.js';
-import { runScenario } from '../src/workflow.js';
-import { discordMessage, discordModal, commandManifest, readConfig } from '../src/discord.js';
-test('bundled adversarial ticket scenarios all pass',async()=>{const results=await runScenarios();assert.equal(results.length,11);assert.deepEqual(results.filter(r=>!r.passed),[]);});
-test('state survives a new store and continues ticket numbering',async()=>{const dir=await mkdtemp(join(tmpdir(),'guildwright-'));try{const path=join(dir,'state.json');const store=new Store(path);await store.load();const sim=new Simulator(ticketBot(),store);await sim.run(input('ticket:create',{kind:'modal',fields:{topic:'Persist me'}}));const recovered=new Store(path);await recovered.load();assert.equal(recovered.snapshot().tickets[0].status,'open');assert.equal(recovered.snapshot().nextTicket,2);assert.equal((JSON.parse(await readFile(path,'utf8'))).version,1);}finally{await rm(dir,{recursive:true,force:true});}});
-test('corrupt state is rejected without overwriting evidence',async()=>{const dir=await mkdtemp(join(tmpdir(),'guildwright-'));try{const path=join(dir,'state.json');await writeFile(path,'{"version":2}');await assert.rejects(new Store(path).load());assert.equal(await readFile(path,'utf8'),'{"version":2}');}finally{await rm(dir,{recursive:true,force:true});}});
-test('failed mutation rolls back and later transactions still work',async()=>{const store=new Store();await assert.rejects(store.mutate(s=>{s.nextTicket=900;throw new Error('fail');}));assert.equal(store.snapshot().nextTicket,1);await store.mutate(s=>{s.nextTicket=2;});assert.equal(store.snapshot().nextTicket,2);});
-test('missing acknowledgement and edit-before-ack are diagnosed',async()=>{for(const [name,handler,code] of [['missing',async()=>{},'GW_NO_ACK'],['edit',async(c:any)=>c.edit({content:'oops'}),'GW_EDIT_BEFORE_ACK']] as const){const bot=defineBot({name:'fixture',routes:[],commands:[{name,description:'fixture',handler}]});const result=await new Simulator(bot).run(input(name));assert.equal(result.diagnostics[0].code,code);}});
-test('followup after defer is permitted and initial reply after defer is rejected',async()=>{const bot=defineBot({name:'fixture',routes:[],commands:[{name:'flow',description:'fixture',handler:async c=>{await c.defer();await c.edit({content:'Done'});await c.followup({content:'More'});await c.reply({content:'Wrong'});}}]});const r=await new Simulator(bot).run(input('flow'));assert.deepEqual(r.events.map(e=>e.type),['defer','edit','followup','followup']);assert.equal(r.diagnostics[0].code,'GW_DOUBLE_ACK');});
-test('failed provisioning leaves a recoverable reservation and avoids duplicate side effects',async()=>{const sim=new Simulator(ticketBot());let effects=0;sim.port.createTicket=async()=>{effects++;throw new Error('Timeout after possible remote create');};const r=await sim.run(input('ticket:create',{kind:'modal',fields:{topic:'Network ambiguity'}}));assert.equal(r.diagnostics[0].code,'GW_PROVISION_INCOMPLETE');assert.equal(r.state.tickets[0].status,'provisioning');await sim.run(input('ticket:create',{kind:'modal',fields:{topic:'Retry'}}));assert.equal(effects,1);});
-test('guild scoping prevents closing another guild ticket',async()=>{const sim=new Simulator(ticketBot());await sim.run(input('ticket:create',{kind:'modal',fields:{topic:'Help'}}));const r=await sim.run(input('ticket:close:ticket-1',{kind:'button',guildId:'other',actor:actors.moderator}));assert.equal(r.diagnostics[0].code,'GW_TICKET_MISSING');assert.equal(r.state.tickets[0].status,'open');});
-test('invalid topics cannot create tickets',async()=>{const sim=new Simulator(ticketBot());for(const topic of [' ','x'.repeat(501)]){const r=await sim.run(input('ticket:create',{kind:'modal',fields:{topic}}));assert.equal(r.diagnostics[0].code,'GW_INPUT_INVALID');assert.equal(r.state.tickets.length,0);}});
-test('simulated scenario assertions fail with actionable evidence',async()=>{const r=await runScenario(ticketBot(),{name:'intentional mismatch',steps:[{name:'ping',expect:{contentIncludes:'wrong'}}]});assert.equal(r.passed,false);assert.match(r.steps[0].errors[0],/wrong/);});
-test('generated Discord payloads are buildable and mentions are disabled',()=>{const payload=discordMessage({content:'@everyone',ephemeral:true,buttons:[{id:'close',label:'Close',style:'danger'}]});assert.deepEqual(payload.allowedMentions.parse,[]);assert.equal(payload.components[0].toJSON().components[0].type,2);const modal=discordModal({id:'form',title:'Support',fields:[{id:'topic',label:'Topic',maxLength:500}]});assert.equal(modal.toJSON().custom_id,'form');assert.equal(commandManifest(ticketBot()).length,6);});
-test('configuration errors name keys without printing secret values',()=>{assert.throws(()=>readConfig({DISCORD_TOKEN:'supersecret'}),e=>String(e).includes('DISCORD_APPLICATION_ID')&&!String(e).includes('supersecret'));});
-test('duplicate commands are rejected before registration',()=>{assert.throws(()=>defineBot({name:'x',routes:[],commands:[{name:'same',description:'a',handler:async()=>{}},{name:'same',description:'b',handler:async()=>{}}]}),/duplicate/);});
-test('concurrent initial responses cannot both acknowledge',async()=>{const bot=defineBot({name:'fixture',routes:[],commands:[{name:'race',description:'Fixture',handler:async c=>{await Promise.all([c.reply({content:'First'}),c.reply({content:'Second'})]);}}]});const r=await new Simulator(bot).run(input('race'));assert.equal(r.events.filter(e=>e.type==='reply').length,1);assert.equal(r.diagnostics[0].code,'GW_DOUBLE_ACK');});
-test('Discord output limits fail before a transport request',async()=>{const bot=defineBot({name:'fixture',routes:[],commands:[{name:'large',description:'Fixture',handler:async c=>{await c.reply({content:'x'.repeat(2001)});}}]});const r=await new Simulator(bot).run(input('large'));assert.equal(r.diagnostics[0].code,'GW_OUTPUT_INVALID');assert.equal(r.events[0].type,'reply');assert.notEqual((r.events[0].data as any).content.length,2001);});
-test('definitely failed provisioning releases its reservation',async()=>{const sim=new Simulator(ticketBot());sim.port.createTicket=async()=>{throw new Fault('GW_BOT_PERMISSION','Missing bot permission','Correct the server permissions');};const r=await sim.run(input('ticket:create',{kind:'modal',fields:{topic:'Help'}}));assert.equal(r.state.tickets.length,0);assert.equal(r.diagnostics[0].code,'GW_BOT_PERMISSION');});
-test('response transport failure does not mislabel a completed creation',async()=>{const sim=new Simulator(ticketBot());sim.port.send=async(type)=>{if(type==='edit')throw new Error('Transport failed after successful channel creation');};const r=await sim.run(input('ticket:create',{kind:'modal',fields:{topic:'Help'}}));assert.equal(r.state.tickets[0].status,'open');assert.equal(r.diagnostics[0].code,'GW_HANDLER_ERROR');});
-test('misspelled or empty assertions cannot silently pass',async()=>{await assert.rejects(runScenario(ticketBot(),{name:'Bad',steps:[{name:'ping',expect:{} }]}),/assertions/);await assert.rejects(runScenario(ticketBot(),{name:'Bad',steps:[{name:'ping',expect:{ticketCounts:1} as any}]}),/assertions/);});
-test('moderator closes from the ticket channel without seeing the original private reply',async()=>{const sim=new Simulator(ticketBot());await sim.run(input('ticket:create',{kind:'modal',fields:{topic:'Help'}}));const channelId=sim.store.snapshot().tickets[0].channelId;const stranger=await sim.run(input('close-ticket',{channelId,actor:actors.stranger}));assert.equal(stranger.diagnostics[0].code,'GW_PERMISSION_DENIED');const mod=await sim.run(input('close-ticket',{channelId,actor:actors.moderator}));assert.equal(mod.diagnostics.length,0);assert.equal(mod.state.tickets[0].status,'closed');});
+import test from "node:test";
+import assert from "node:assert/strict";
+import { mkdtemp, readFile, writeFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { defineBot, Fault } from "../src/core.js";
+import { Store } from "../src/store.js";
+import { input, actors, Simulator } from "../src/simulate.js";
+import { ticketBot } from "../src/recipes.js";
+import { runScenarios } from "../src/scenarios.js";
+import { runScenario } from "../src/workflow.js";
+import {
+  discordMessage,
+  discordModal,
+  commandManifest,
+  readConfig,
+} from "../src/discord.js";
+test("bundled adversarial ticket scenarios all pass", async () => {
+  const results = await runScenarios();
+  assert.equal(results.length, 11);
+  assert.deepEqual(
+    results.filter((r) => !r.passed),
+    [],
+  );
+});
+test("state survives a new store and continues ticket numbering", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "guildwright-"));
+  try {
+    const path = join(dir, "state.json");
+    const store = new Store(path);
+    await store.load();
+    const sim = new Simulator(ticketBot(), store);
+    await sim.run(
+      input("ticket:create", {
+        kind: "modal",
+        fields: { topic: "Persist me" },
+      }),
+    );
+    const recovered = new Store(path);
+    await recovered.load();
+    assert.equal(recovered.snapshot().tickets[0].status, "open");
+    assert.equal(recovered.snapshot().nextTicket, 2);
+    assert.equal(JSON.parse(await readFile(path, "utf8")).version, 1);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+test("corrupt state is rejected without overwriting evidence", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "guildwright-"));
+  try {
+    const path = join(dir, "state.json");
+    await writeFile(path, '{"version":2}');
+    await assert.rejects(new Store(path).load());
+    assert.equal(await readFile(path, "utf8"), '{"version":2}');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+test("failed mutation rolls back and later transactions still work", async () => {
+  const store = new Store();
+  await assert.rejects(
+    store.mutate((s) => {
+      s.nextTicket = 900;
+      throw new Error("fail");
+    }),
+  );
+  assert.equal(store.snapshot().nextTicket, 1);
+  await store.mutate((s) => {
+    s.nextTicket = 2;
+  });
+  assert.equal(store.snapshot().nextTicket, 2);
+});
+test("missing acknowledgement and edit-before-ack are diagnosed", async () => {
+  for (const [name, handler, code] of [
+    ["missing", async () => {}, "GW_NO_ACK"],
+    [
+      "edit",
+      async (c: any) => c.edit({ content: "oops" }),
+      "GW_EDIT_BEFORE_ACK",
+    ],
+  ] as const) {
+    const bot = defineBot({
+      name: "fixture",
+      routes: [],
+      commands: [{ name, description: "fixture", handler }],
+    });
+    const result = await new Simulator(bot).run(input(name));
+    assert.equal(result.diagnostics[0].code, code);
+  }
+});
+test("followup after defer is permitted and initial reply after defer is rejected", async () => {
+  const bot = defineBot({
+    name: "fixture",
+    routes: [],
+    commands: [
+      {
+        name: "flow",
+        description: "fixture",
+        handler: async (c) => {
+          await c.defer();
+          await c.edit({ content: "Done" });
+          await c.followup({ content: "More" });
+          await c.reply({ content: "Wrong" });
+        },
+      },
+    ],
+  });
+  const r = await new Simulator(bot).run(input("flow"));
+  assert.deepEqual(
+    r.events.map((e) => e.type),
+    ["defer", "edit", "followup", "followup"],
+  );
+  assert.equal(r.diagnostics[0].code, "GW_DOUBLE_ACK");
+});
+test("failed provisioning leaves a recoverable reservation and avoids duplicate side effects", async () => {
+  const sim = new Simulator(ticketBot());
+  let effects = 0;
+  sim.port.createTicket = async () => {
+    effects++;
+    throw new Error("Timeout after possible remote create");
+  };
+  const r = await sim.run(
+    input("ticket:create", {
+      kind: "modal",
+      fields: { topic: "Network ambiguity" },
+    }),
+  );
+  assert.equal(r.diagnostics[0].code, "GW_PROVISION_INCOMPLETE");
+  assert.equal(r.state.tickets[0].status, "provisioning");
+  await sim.run(
+    input("ticket:create", { kind: "modal", fields: { topic: "Retry" } }),
+  );
+  assert.equal(effects, 1);
+});
+test("guild scoping prevents closing another guild ticket", async () => {
+  const sim = new Simulator(ticketBot());
+  await sim.run(
+    input("ticket:create", { kind: "modal", fields: { topic: "Help" } }),
+  );
+  const r = await sim.run(
+    input("ticket:close:ticket-1", {
+      kind: "button",
+      guildId: "other",
+      actor: actors.moderator,
+    }),
+  );
+  assert.equal(r.diagnostics[0].code, "GW_TICKET_MISSING");
+  assert.equal(r.state.tickets[0].status, "open");
+});
+test("invalid topics cannot create tickets", async () => {
+  const sim = new Simulator(ticketBot());
+  for (const topic of [" ", "x".repeat(501)]) {
+    const r = await sim.run(
+      input("ticket:create", { kind: "modal", fields: { topic } }),
+    );
+    assert.equal(r.diagnostics[0].code, "GW_INPUT_INVALID");
+    assert.equal(r.state.tickets.length, 0);
+  }
+});
+test("simulated scenario assertions fail with actionable evidence", async () => {
+  const r = await runScenario(ticketBot(), {
+    name: "intentional mismatch",
+    steps: [{ name: "ping", expect: { contentIncludes: "wrong" } }],
+  });
+  assert.equal(r.passed, false);
+  assert.match(r.steps[0].errors[0], /wrong/);
+});
+test("generated Discord payloads are buildable and mentions are disabled", () => {
+  const payload = discordMessage({
+    content: "@everyone",
+    ephemeral: true,
+    buttons: [{ id: "close", label: "Close", style: "danger" }],
+  });
+  assert.deepEqual(payload.allowedMentions.parse, []);
+  assert.equal(payload.components[0].toJSON().components[0].type, 2);
+  const modal = discordModal({
+    id: "form",
+    title: "Support",
+    fields: [{ id: "topic", label: "Topic", maxLength: 500 }],
+  });
+  assert.equal(modal.toJSON().custom_id, "form");
+  assert.equal(commandManifest(ticketBot()).length, 6);
+});
+test("configuration errors name keys without printing secret values", () => {
+  assert.throws(
+    () => readConfig({ DISCORD_TOKEN: "supersecret" }),
+    (e) =>
+      String(e).includes("DISCORD_APPLICATION_ID") &&
+      !String(e).includes("supersecret"),
+  );
+});
+test("duplicate commands are rejected before registration", () => {
+  assert.throws(
+    () =>
+      defineBot({
+        name: "x",
+        routes: [],
+        commands: [
+          { name: "same", description: "a", handler: async () => {} },
+          { name: "same", description: "b", handler: async () => {} },
+        ],
+      }),
+    /duplicate/,
+  );
+});
+test("concurrent initial responses cannot both acknowledge", async () => {
+  const bot = defineBot({
+    name: "fixture",
+    routes: [],
+    commands: [
+      {
+        name: "race",
+        description: "Fixture",
+        handler: async (c) => {
+          await Promise.all([
+            c.reply({ content: "First" }),
+            c.reply({ content: "Second" }),
+          ]);
+        },
+      },
+    ],
+  });
+  const r = await new Simulator(bot).run(input("race"));
+  assert.equal(r.events.filter((e) => e.type === "reply").length, 1);
+  assert.equal(r.diagnostics[0].code, "GW_DOUBLE_ACK");
+});
+test("Discord output limits fail before a transport request", async () => {
+  const bot = defineBot({
+    name: "fixture",
+    routes: [],
+    commands: [
+      {
+        name: "large",
+        description: "Fixture",
+        handler: async (c) => {
+          await c.reply({ content: "x".repeat(2001) });
+        },
+      },
+    ],
+  });
+  const r = await new Simulator(bot).run(input("large"));
+  assert.equal(r.diagnostics[0].code, "GW_OUTPUT_INVALID");
+  assert.equal(r.events[0].type, "reply");
+  assert.notEqual((r.events[0].data as any).content.length, 2001);
+});
+test("definitely failed provisioning releases its reservation", async () => {
+  const sim = new Simulator(ticketBot());
+  sim.port.createTicket = async () => {
+    throw new Fault(
+      "GW_BOT_PERMISSION",
+      "Missing bot permission",
+      "Correct the server permissions",
+    );
+  };
+  const r = await sim.run(
+    input("ticket:create", { kind: "modal", fields: { topic: "Help" } }),
+  );
+  assert.equal(r.state.tickets.length, 0);
+  assert.equal(r.diagnostics[0].code, "GW_BOT_PERMISSION");
+});
+test("response transport failure does not mislabel a completed creation", async () => {
+  const sim = new Simulator(ticketBot());
+  sim.port.send = async (type) => {
+    if (type === "edit")
+      throw new Error("Transport failed after successful channel creation");
+  };
+  const r = await sim.run(
+    input("ticket:create", { kind: "modal", fields: { topic: "Help" } }),
+  );
+  assert.equal(r.state.tickets[0].status, "open");
+  assert.equal(r.diagnostics[0].code, "GW_HANDLER_ERROR");
+});
+test("misspelled or empty assertions cannot silently pass", async () => {
+  await assert.rejects(
+    runScenario(ticketBot(), {
+      name: "Bad",
+      steps: [{ name: "ping", expect: {} }],
+    }),
+    /assertions/,
+  );
+  await assert.rejects(
+    runScenario(ticketBot(), {
+      name: "Bad",
+      steps: [{ name: "ping", expect: { ticketCounts: 1 } as any }],
+    }),
+    /assertions/,
+  );
+});
+test("moderator closes from the ticket channel without seeing the original private reply", async () => {
+  const sim = new Simulator(ticketBot());
+  await sim.run(
+    input("ticket:create", { kind: "modal", fields: { topic: "Help" } }),
+  );
+  const channelId = sim.store.snapshot().tickets[0].channelId;
+  const stranger = await sim.run(
+    input("close-ticket", { channelId, actor: actors.stranger }),
+  );
+  assert.equal(stranger.diagnostics[0].code, "GW_PERMISSION_DENIED");
+  const mod = await sim.run(
+    input("close-ticket", { channelId, actor: actors.moderator }),
+  );
+  assert.equal(mod.diagnostics.length, 0);
+  assert.equal(mod.state.tickets[0].status, "closed");
+});

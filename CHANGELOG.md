@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.0
+
+- Versioned custom JSON namespaces with guild/global scopes, atomic transactions, scalar updates, validation and defensive copies.
+- Advanced scenarios: named captures, typed references, replay, exact/absent JSON-pointer assertions, parallel batches and transport fault fixtures.
+- Token-free session/scenario evidence, validated checkpoint restoration and isolated replay.
+- Slash subcommands/groups, shared read-only autocomplete and typed Discord embeds with constraint validation.
+- Poll reference bot implemented entirely on the generic namespace API.
+- Custom scenario-file and state-introspection MCP tools, contract-aware local doctor, three recipe scaffolds.
+- Namespace aliasing and malformed pointer issues caught by independent review and covered by regression tests.
+
 ## 0.1.0
 
 - Shared command/component handlers for local simulation and discord.js.

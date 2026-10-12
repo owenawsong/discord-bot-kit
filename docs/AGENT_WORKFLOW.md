@@ -4,7 +4,7 @@ Use this prompt with the coding agent you already have:
 
 > Read AGENTS.md. Inspect the bot. Add a /hello command that replies privately with “Welcome aboard.” Add a scenario that proves the response and checks that it acknowledges cleanly. Run the scenario and the ticket recipe checks. Open the workshop and inspect both desktop and mobile. Report the actual commands and results. Do not register commands or connect to Discord yet.
 
-The skill is in `skills/guildwright/SKILL.md`; `guildwright init` copies it into the bot as `AGENTS.md`. For an existing project copy it into your agent's supported skill location, or link it from your own agent instructions. The tools work with any assistant capable of executing commands; there is no model subscription or API key for the workshop.
+The skill is in `skills/guildwright/SKILL.md`; `guildwright init` copies it into the bot as `AGENTS.md`, along with the state/scenario/API guides. For an existing project copy it into your agent's supported skill location, or link it from your own instructions. The tools work with any assistant capable of executing commands; there is no model subscription or API key for the workshop.
 
 ## Example progression
 
@@ -19,6 +19,6 @@ The agent sees executable failures, not just a checklist in prose. Exported evid
 
 ## Extending responsibly
 
-Tickets and event signups have complete included examples. For moderation and AI chat, implement the feature and its domain service before advertising a recipe. Include authorization on slash, button, select and modal paths; real-server integration steps; timeout handling; persistent state and recovery. An AI chat recipe additionally needs explicit token/spend limits and cancellation. These are roadmap items.
+Tickets, signups and polls have complete included examples. Polls demonstrate generic namespaces, subcommands, shared autocomplete, embeds and captured/parallel assertions. For your own feature, declare its schema rather than extending the built-in ticket state. Test exact state and rejection paths, not just a clean reply. For moderation and AI chat, implement domain services before advertising a recipe; AI chat additionally needs spend limits and cancellation. These are roadmap items.
 
 Do not use an agent's confident explanation as a test oracle. Assertions should inspect actual outputs and state. The local suite cannot prove API behavior or real Discord permissions; record those separately.
