@@ -33,6 +33,7 @@ import { Store } from "./store.js";
 import { validateMessage } from "./messages.js";
 import { runAutocomplete } from "./autocomplete.js";
 import type { Command } from "./types.js";
+import { defaultStatePath } from "./identity.js";
 export interface DiscordConfig {
   token: string;
   applicationId: string;
@@ -67,7 +68,7 @@ export function readConfig(
     applicationId: env.DISCORD_APPLICATION_ID!,
     guildId: env.DISCORD_GUILD_ID!,
     supportRoleId: env.DISCORD_SUPPORT_ROLE_ID!,
-    statePath: env.GUILDWRIGHT_STATE ?? ".guildwright/live-state.json",
+    statePath: defaultStatePath(env),
   };
 }
 export function commandManifest(bot: Bot) {
@@ -269,7 +270,13 @@ export function discordModal(modal: Modal) {
     );
 }
 function marker(t: Ticket) {
-  return `guildwright:${t.guildId}:${t.id}:${t.owner}`;
+  return `discord-bot-kit:${t.guildId}:${t.id}:${t.owner}`;
+}
+function matchesMarker(topic: string | null, ticket: Ticket) {
+  return (
+    topic === marker(ticket) ||
+    topic === `guildwright:${ticket.guildId}:${ticket.id}:${ticket.owner}`
+  );
 }
 async function archive(guild: Guild, ticket: Ticket) {
   const me = await guild.members.fetchMe();
@@ -285,7 +292,7 @@ async function archive(guild: Guild, ticket: Ticket) {
   if (
     !channel ||
     channel.type !== ChannelType.GuildText ||
-    channel.topic !== marker(ticket)
+    !matchesMarker(channel.topic, ticket)
   )
     throw new Error(
       "Channel identity mismatch; refusing to modify an unrelated channel",
@@ -293,9 +300,9 @@ async function archive(guild: Guild, ticket: Ticket) {
   await channel.permissionOverwrites.edit(
     ticket.owner,
     { SendMessages: false },
-    { type: OverwriteType.Member, reason: "Guildwright ticket closed" },
+    { type: OverwriteType.Member, reason: "Discord Bot Kit ticket closed" },
   );
-  await channel.setName(`closed-${ticket.id}`, "Guildwright ticket closed");
+  await channel.setName(`closed-${ticket.id}`, "Discord Bot Kit ticket closed");
 }
 /** Reconcile already-created channels. Missing or ambiguous effects require an operator; never guess. */
 export async function reconcile(guild: Guild, store: Store) {
@@ -318,7 +325,8 @@ export async function reconcile(guild: Guild, store: Store) {
         continue;
       }
       const matches = channels.filter(
-        (c) => c?.type === ChannelType.GuildText && c.topic === marker(ticket),
+        (c) =>
+          c?.type === ChannelType.GuildText && matchesMarker(c.topic, ticket),
       );
       if (matches.size === 1) {
         const channel = matches.first()!;

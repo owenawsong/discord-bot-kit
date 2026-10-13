@@ -3,8 +3,8 @@
 Run a JSON scenario against your actual handlers:
 
 ```bash
-npm exec -- guildwright test --bot bot.mjs --scenario scenario.json --out evidence.json
-npm exec -- guildwright replay --bot bot.mjs --evidence evidence.json
+npm exec -- discord-bot-kit test --bot bot.mjs --scenario scenario.json --out evidence.json
+npm exec -- discord-bot-kit replay --bot bot.mjs --evidence evidence.json
 ```
 
 The runner creates isolated state. Your interactive session and live state file are untouched. Each step returns its input, events, diagnostics, resulting state and simulated channel fixtures. A failing assertion exits nonzero and names the mismatched path/value.
@@ -87,7 +87,7 @@ Each step may include `faults`: `send` (one event type fails once), `createTicke
 
 ## Evidence and replay
 
-Scenario reports use `format: "guildwright.scenario"`, format version 1, tool version, original scenario, inputs/results, captures, final state and scenario/definition hashes. Session exports use `guildwright.session`, initial state and executions. Imported initial state is validated against current contracts before isolated replay.
+Scenario reports use `format: "discord-bot-kit.scenario"`, format version 1, tool version, original scenario, inputs/results, captures, final state and scenario/definition hashes. Session exports use `discord-bot-kit.session`, initial state and executions. Imported initial state is validated against current contracts before isolated replay.
 
 Replay invokes the current bot implementation. The definition fingerprint covers registered handler/validator function text and contract metadata, **not imported dependencies or captured closure values**. Dates, generated IDs, external work in trusted handlers and concurrent ordering are not guaranteed to be byte-identical. This is reproducible input/assertion evidence, not a claim of hermetic execution. Inspect source/current fingerprints and retain version-controlled source with published evidence.
 

@@ -1,18 +1,18 @@
 ---
-name: guildwright
-description: Build and verify a Guildwright Discord bot with local interaction simulation, scenario evidence, and shared production handlers.
+name: discord-bot-kit
+description: Build and verify a Discord Bot Kit Discord bot with local interaction simulation, scenario evidence, and shared production handlers.
 ---
 
 # Build a bot people can trust
 
-Use the installed `guildwright` CLI through the project's npm scripts or `npm exec -- guildwright ...`; no global installation is assumed. Read `DISCORD_SETUP.md` before live Discord operations. Never ask for tokens in chat or add .env to Git.
+Use the installed `discord-bot-kit` CLI through the project's npm scripts or `npm exec -- discord-bot-kit ...`; no global installation is assumed. Read `DISCORD_SETUP.md` before live Discord operations. Never ask for tokens in chat or add .env to Git.
 
 ## Development loop
 
-1. Inspect `bot.mjs` and `scenario.json`; run `guildwright inspect --bot bot.mjs`.
+1. Inspect `bot.mjs` and `scenario.json`; run `discord-bot-kit inspect --bot bot.mjs`.
 2. Implement handlers in the Bot export. Reuse a recipe or add your own commands/routes. Declare slash options and use validated `ctx.args`; no parallel mock handlers. Use versioned namespaces for custom data, defaulting to the current guild.
-3. Run `guildwright test --bot bot.mjs --scenario scenario.json --json`. Add assertions for the new behavior and forbidden behavior.
-4. Run `guildwright playground --bot bot.mjs`; inspect the real UI, run commands, click components, submit modals, switch actors. Export evidence if helpful.
+3. Run `discord-bot-kit test --bot bot.mjs --scenario scenario.json --json`. Add assertions for the new behavior and forbidden behavior.
+4. Run `discord-bot-kit playground --bot bot.mjs`; inspect the real UI, run commands, click components, submit modals, switch actors. Export evidence if helpful.
 5. Fix the diagnostic's cause, rerun the relevant scenario, and describe what was tested. Do not infer production fidelity from local success.
 
 ## Interaction rules
@@ -30,15 +30,15 @@ Use the installed `guildwright` CLI through the project's npm scripts or `npm ex
 
 ## CLI evidence
 
-- `guildwright inspect --bot bot.mjs`: command manifest and component route map.
-- `guildwright test --bot bot.mjs`: selected recipe checks (tickets/signups/polls); custom bots use scenario files.
-- `guildwright test --bot bot.mjs --scenario scenario.json --json`: sequential inputs and concrete assertions.
-- `guildwright simulate --bot bot.mjs --input interaction.json`: one Input with events, diagnostics, elapsed time and resulting state.
-- `guildwright doctor`: offline environment/identifier validation, not token validity.
-- `guildwright doctor --local`: offline contracts, manifest and state validation without credentials.
-- `guildwright replay --bot bot.mjs --evidence evidence.json`: isolated evidence replay, never current-session/live-file mutation.
-- `guildwright register --bot bot.mjs`: preview. `--apply` replaces this application's test-guild commands; obtain explicit human authorization first.
-- `guildwright start --bot bot.mjs`: connects a real bot and may create/archive channels when users interact. Ask before operating a live account unless already authorized.
+- `discord-bot-kit inspect --bot bot.mjs`: command manifest and component route map.
+- `discord-bot-kit test --bot bot.mjs`: selected recipe checks (tickets/signups/polls); custom bots use scenario files.
+- `discord-bot-kit test --bot bot.mjs --scenario scenario.json --json`: sequential inputs and concrete assertions.
+- `discord-bot-kit simulate --bot bot.mjs --input interaction.json`: one Input with events, diagnostics, elapsed time and resulting state.
+- `discord-bot-kit doctor`: offline environment/identifier validation, not token validity.
+- `discord-bot-kit doctor --local`: offline contracts, manifest and state validation without credentials.
+- `discord-bot-kit replay --bot bot.mjs --evidence evidence.json`: isolated evidence replay, never current-session/live-file mutation.
+- `discord-bot-kit register --bot bot.mjs`: preview. `--apply` replaces this application's test-guild commands; obtain explicit human authorization first.
+- `discord-bot-kit start --bot bot.mjs`: connects a real bot and may create/archive channels when users interact. Ask before operating a live account unless already authorized.
 
 ## What not to claim
 

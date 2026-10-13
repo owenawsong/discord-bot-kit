@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1
+
+- Rename the repository, package, primary CLI, agent skill and workspace to discord-bot-kit.
+- Preserve legacy command alias, state environment/path, evidence replay, session header and complete ticket markers.
+- Rework README and launch material around local development, executable scenarios and agent integration.
+
 ## 0.2.0
 
 - Versioned custom JSON namespaces with guild/global scopes, atomic transactions, scalar updates, validation and defensive copies.

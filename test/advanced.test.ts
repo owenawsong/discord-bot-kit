@@ -144,7 +144,7 @@ test("session replay restores a validated initial checkpoint before applying inp
     input("poll vote", { args: { poll: "poll-1", answer: 2 } }),
   );
   const replay = await replayEvidence(pollBot(), {
-    format: "guildwright.session",
+    format: "discord-bot-kit.session",
     version: 1,
     initialState,
     executions: [voted],
@@ -177,7 +177,7 @@ test("session replay carries fault fixtures and rejects malformed evidence versi
   );
   await assert.rejects(
     replayEvidence(ticketBot(), {
-      format: "guildwright.session",
+      format: "discord-bot-kit.session",
       version: 99,
       executions: [failure],
     }),

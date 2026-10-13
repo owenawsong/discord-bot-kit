@@ -1,68 +1,38 @@
-# Guildwright
+# discord-bot-kit
 
-### Build Discord bots with a feedback loop your coding agent can use.
+**Build and test Discord bots locally, with a workspace your coding agent can use.**
 
-**Run the interaction. Inspect the failure. Keep the test.**
+Run slash commands, buttons, modals and select menus against your actual handlers. Inspect the response lifecycle and state changes, capture a session as a test, then use the same bot definition with the included Discord adapter.
 
-Guildwright gives you and your agent a local workspace for Discord bot development: slash commands, buttons, modals, select menus, state inspection, executable scenarios and replayable evidence. Your actual handlers run in the simulator. The same bot definition connects to Discord through the included adapter.
+<p><img src="assets/ticket-walkthrough.svg" width="100%" alt="Verified local ticket workflow: Mira creates a ticket, Rowan's close attempt is denied, and Alex closes it as moderator."></p>
+
+_An interaction trace generated from the actual handlers, illustrating the response and ticket state at each step. [Inspect the values](assets/ticket-walkthrough.json) or reproduce it with `npm run docs:demo`._
 
 **Node 22.12+ · TypeScript · CLI + MCP · MIT**
 
-[Get started](#open-the-workspace) · [Agent workflow](docs/AGENT_WORKFLOW.md) · [API](docs/API.md) · [Scenarios](docs/SCENARIOS.md) · [Discord setup](docs/DISCORD_SETUP.md)
+[Quickstart](#try-the-ticket-workflow) · [Build your bot](#start-a-bot-you-can-edit) · [Agent integration](#give-your-agent-a-testable-task) · [API](docs/API.md) · [Discord setup](docs/DISCORD_SETUP.md)
 
-```text
-                         YOUR BOT DEFINITION
-                                 │
-                  ┌──────────────┴──────────────┐
-                  ▼                             ▼
-           LOCAL WORKSPACE                DISCORD ADAPTER
-     commands · components · state     test-guild registration
-                  │                       gateway transport
-                  ▼
-        TRACE → ASSERTIONS → REPLAY
-             executable evidence
-```
-
-## Open the workspace
-
-No Discord token or AI account is needed for local development.
+## Try the ticket workflow
 
 ```bash
-git clone https://github.com/owenawsong/Guildwright.git
-cd Guildwright
+git clone https://github.com/owenawsong/discord-bot-kit.git
+cd discord-bot-kit
 npm ci
 npm run dev
 ```
 
-Open **http://127.0.0.1:18874** and try this:
+Open **http://127.0.0.1:18874**. No Discord token or AI account is needed locally.
 
 1. Run `/ticket` and submit the modal.
-2. Switch to **Rowan · Other member** and click **Close ticket**. Inspect the authorization diagnostic and state changes.
-3. Switch to the moderator and close the ticket.
-4. Select **Turn session into a test**, review the inferred assertions, and run it against fresh state.
+2. Switch to **Rowan · Other member** and try **Close ticket**. The handler rejects it; inspect the diagnostic and unchanged ticket state.
+3. Switch to **Alex · Moderator** and close it successfully.
+4. Select **Turn session into a test**, review the inferred assertions, and run the scenario against fresh state.
 
-The workspace keeps the conversation, event timeline, state differences and execution history together. Its **Bot contract** view exposes options, permissions, component routes and namespace schemas. The **Test scenarios** view accepts editable JSON and reports failing paths; session exports can be replayed in a separate simulator.
+The conversation, event timeline, state differences and execution history stay together. **Bot contract** exposes commands, options, permissions, component routes and state schemas. **Test scenarios** accepts editable JSON and reports concrete assertion failures.
 
-## Three working bots to learn from
+## Start a bot you can edit
 
-| Recipe | Workflow | Useful failure cases |
-| --- | --- | --- |
-| **Tickets** | Modal → reserved state → private channel → authorized close | Concurrent submissions, another member closing a ticket, ambiguous channel creation and recovery |
-| **Event signups** | Create an event → join/leave → capacity → close | Duplicate joins, competing final places, stale buttons and ordered message edits |
-| **Polls** | Subcommands → embedded card → vote/select → close | Changed votes, concurrent voting, ownership, autocomplete and persistent custom state |
-
-```bash
-npm run build
-node dist/src/cli.js playground --recipe signups --port 18875
-# In another terminal:
-node dist/src/cli.js playground --recipe polls --port 18876
-```
-
-The poll recipe is implemented with the public namespace API. It is an example of building your own domain without adding tables to Guildwright itself. [Poll walkthrough →](docs/POLLS.md)
-
-## Give your agent a complete working loop
-
-Create a bot in a **new directory**:
+From the built checkout, scaffold into a new directory:
 
 ```bash
 node dist/src/cli.js init ../my-bot --recipe polls
@@ -72,106 +42,105 @@ npm test
 npm run playground
 ```
 
-Choose `tickets`, `signups` or `polls`. Each starter includes a matching bot, scenario, deployment configuration, focused `AGENTS.md` and API/state/scenario guides. The dependency points to your local clone. For a portable installation, build a tarball with `npm pack` and supply its absolute path using `init --package /path/to/package.tgz`. No public npm release is assumed.
+The starter includes `bot.mjs`, executable scenarios, `.env.example`, deployment instructions and an `AGENTS.md` for coding assistants. Its dependency points to your clone. To move it to another machine, build a tarball with `npm pack` and pass its absolute path to `init --package /path/to/package.tgz`. The quickstart does not assume an npm publication.
 
-> Read AGENTS.md. Add a command that shows a member's vote privately. Add a scenario for a member without a vote and one after voting. Run both, inspect the execution evidence, and show the result in the local workspace.
+| Starter           | What it implements                                        | What its tests exercise                                                  |
+| ----------------- | --------------------------------------------------------- | ------------------------------------------------------------------------ |
+| **Tickets**       | Support modal, channel reservation and authorized closure | Concurrent requests, forbidden clicks and ambiguous creation recovery    |
+| **Event signups** | Event creation, join/leave, capacity and closure          | Duplicate joins, competing final places and stale components             |
+| **Polls**         | Subcommands, embedded cards, voting and autocomplete      | Changed votes, concurrent updates, ownership and custom persistent state |
 
-The [included agent skill](skills/guildwright/SKILL.md) teaches the local loop. The [stdio MCP server](docs/API.md#mcp-local-stdio) exposes inspect, simulate, test, replay and reset operations. MCP cannot connect to Discord or register live commands.
+Choose `--recipe tickets`, `signups` or `polls`. You can inspect the other recipes directly with `node dist/src/cli.js playground --recipe polls --port 18876` or `--recipe signups --port 18875`. [Poll walkthrough →](docs/POLLS.md)
 
-## State your bot can own
+## Give your agent a testable task
 
-Declare versioned JSON state, scoped to a guild by default:
+> Read AGENTS.md. Add a command that privately shows a member's vote. Test a member with no vote and one after voting. Run the scenarios, inspect the evidence and show the result in the local workspace.
+
+The [agent skill](skills/discord-bot-kit/SKILL.md) documents this loop. The [stdio MCP server](docs/API.md#mcp-local-stdio) exposes inspection, interaction simulation, scenarios, autocomplete, state and reset. Its tools operate locally; live registration and connection use explicit CLI commands.
+
+Handlers use the same contract for local and Discord execution:
 
 ```js
-import { defineBot, defineNamespace } from '@owenawsong/guildwright';
-
-const counter = defineNamespace({
-  name: 'counter', version: 1, initial: { count: 0 },
-  validate: value => value && Number.isSafeInteger(value.count) && value.count >= 0
-});
+import { defineBot } from "@owenawsong/discord-bot-kit";
 
 export default defineBot({
-  name: 'Counter bot', stateSchemas: [counter], routes: [],
-  commands: [{
-    name: 'counter add', description: 'Increase the counter',
-    handler: async ctx => {
-      await ctx.defer();
-      const count = await ctx.state('counter').transact(draft => ++draft.count);
-      await ctx.edit({ content: `Count: ${count}`, ephemeral: true });
-    }
-  }]
+  name: "My bot",
+  routes: [],
+  commands: [
+    {
+      name: "hello",
+      description: "Welcome a member",
+      handler: async (ctx) => {
+        await ctx.reply({ content: "Welcome aboard.", ephemeral: true });
+      },
+    },
+  ],
 });
 ```
 
-Transactions serialize within one process, validate before persistence and return detached copies. Invalid mutations roll back. A stored version mismatch stops loading and preserves the file for explicit migration. `update()` replaces a root value; explicit global scope supports shared application data. [State guarantees and limits →](docs/STATE.md)
+Typed options, choices, bounds, subcommands/groups, autocomplete, embeds and component handlers are included. [API reference →](docs/API.md)
 
-## Tests that explain what broke
+## Keep behavior as executable evidence
 
-Scenarios exercise actual handlers. Assertions cover diagnostic codes, lifecycle events, content, exact JSON paths and missing values. Captures carry generated IDs into later interactions; parallel batches test final-state invariants; fault fixtures exercise ambiguous effects.
+JSON scenarios support captured IDs, typed references, exact/absent path assertions, parallel batches and simulated faults. Failures exit nonzero with actual results and remedies. There is no model judge deciding whether a test passed.
 
 ```json
 {
   "name": "Create and close a ticket",
   "steps": [
     {
-      "name": "ticket:create", "kind": "modal",
-      "fields": {"topic": "Need help"}, "saveAs": "created",
-      "expect": {"clean": true, "ticketCount": 1}
+      "name": "ticket:create",
+      "kind": "modal",
+      "fields": { "topic": "Need help" },
+      "saveAs": "created",
+      "expect": { "clean": true, "ticketCount": 1 }
     },
     {
-      "name": "ticket:close:${created#/state/tickets/0/id}", "kind": "button",
-      "expect": {"clean": true, "exact": {"/state/tickets/0/status": "closed"}}
+      "name": "ticket:close:${created#/state/tickets/0/id}",
+      "kind": "button",
+      "expect": {
+        "clean": true,
+        "exact": { "/state/tickets/0/status": "closed" }
+      }
     }
   ]
 }
 ```
 
-```bash
-# Inside a generated project:
-npm exec -- guildwright test --bot bot.mjs --scenario scenario.json --out evidence.json
-npm exec -- guildwright replay --bot bot.mjs --evidence evidence.json
-```
-
-Failures exit nonzero and include remedies such as:
-
-```text
-GW_DOUBLE_ACK
-This interaction already has an initial response.
-After defer(), use edit(); after reply(), use followup().
-```
-
-Evidence includes inputs, events, diagnostics, state and definition fingerprints. Replay restores validated initial state in an isolated simulator. Fingerprints cover registered function text and contract metadata; retain source versions because imported dependencies and closure values are not covered. [Scenario and replay reference →](docs/SCENARIOS.md)
-
-## What v0.2 supports
-
-| Area | Included |
-| --- | --- |
-| Commands | Typed options, choices, bounds, booleans, user/channel IDs, subcommands and groups |
-| Autocomplete | Read-only local execution, validated choices, live adapter responses |
-| Components | Buttons, modals, select menus, embedded messages and component updates |
-| Diagnostics | Double acknowledgement, missed deadlines, permissions, options and state errors |
-| State | Versioned namespaces, guild/global scopes, validated transactions and persistence |
-| Verification | Captures, exact/absent assertions, parallel batches, fault fixtures, evidence and replay |
-| Tools | Local browser workspace, CLI, agent skill and stdio MCP |
-| Live transport | discord.js gateway adapter and preview/apply test-guild command registration |
-
-## Verify and connect
+Inside a generated project:
 
 ```bash
-npm run check       # core tests and all three recipe suites
-npm pack            # build a portable package
+npm exec -- discord-bot-kit test --bot bot.mjs --scenario scenario.json --out evidence.json
+npm exec -- discord-bot-kit replay --bot bot.mjs --evidence evidence.json
 ```
 
-CI checks Node 22/24 on Linux and Windows, including fresh installs of all three generated starters. Tests cover state isolation, rollback, restart persistence, concurrency, response lifecycle, commands, embeds, autocomplete, evidence replay, HTTP boundaries and MCP project containment.
+Replay restores validated initial state in an isolated simulator. Evidence includes inputs, events, diagnostics and state. Definition fingerprints cover registered function text and metadata; retain source versions because imported dependencies and closure values are outside that fingerprint. [Scenario reference →](docs/SCENARIOS.md)
 
-The simulator approximates Discord interactions. Gateway events, actual permission overwrites, rate limits, network timing, resolved user/channel objects, attachments and Discord's exact rendering require a real test guild. Measured timings are local handler times. The adapter is implemented and type-checked; **authenticated live-guild verification remains a release gate**. [Test-guild procedure →](docs/DISCORD_SETUP.md)
+## Store your bot's own domain data
 
-The JSON store supports one process per file. Replicated deployments need shared transactional storage. Trusted bot handlers are executable Node code, not sandboxed plugins. Live state and evidence can contain personal data. Registration requires explicit `--apply` and replaces the configured application's guild command list.
+Declare a versioned JSON namespace with an initial value and validator. `ctx.state(name)` is guild-scoped by default; global scope is explicit. Transactions serialize within one process, validate before writing and return detached copies. Invalid mutations roll back, and schema mismatches preserve the file for an explicit migration.
+
+The poll starter is implemented entirely through this public API. [Namespace examples and storage guarantees →](docs/STATE.md)
+
+## Verification and limits
+
+```bash
+npm run check
+npm pack
+```
+
+**68 library tests and 33 bundled recipe scenarios** cover lifecycle handling, authorization, typed arguments, concurrency, persistence, namespace isolation, fault recovery, replay, embeds, autocomplete, HTTP/MCP boundaries and rename compatibility. CI runs Node 22/24 on Windows and Linux, including fresh installs of all three starters.
+
+The workspace simulates interactions; actual gateway behavior, permissions, rate limits, network timing and Discord rendering need a real test guild. Local timings measure handler execution. The adapter is implemented and type-checked; **authenticated live-guild verification remains pending**. [Test-guild procedure →](docs/DISCORD_SETUP.md)
+
+Trusted bot handlers run as Node code. The JSON store supports one process per file; replicated deployments need shared transactional storage. Live state and evidence can contain personal data. Registration requires explicit `--apply` and replaces the configured application's guild command list.
+
+Previously called Guildwright? Old state paths, evidence, session headers and complete channel markers remain supported. [Migration guide →](docs/MIGRATION.md)
 
 ## Contribute
 
-Bring a workflow, a failing scenario and a fix. New recipes should demonstrate authorization, state ownership and recovery—not just a happy-path command.
+A useful contribution starts with a real bot workflow and a scenario that demonstrates its failure. Recipes should exercise ownership, concurrency and recovery alongside the happy path.
 
-[Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Changelog](CHANGELOG.md) · [MIT license](LICENSE)
+[Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Changelog](CHANGELOG.md) · [Launch kit](docs/LAUNCH.md) · [MIT](LICENSE)
 
 Built by [Owen Song](https://github.com/owenawsong), a student developer. Independent project; not affiliated with Discord.

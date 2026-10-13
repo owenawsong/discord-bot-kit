@@ -148,7 +148,8 @@ export async function servePlayground(
         }
         if (
           req.method === "POST" &&
-          req.headers["x-guildwright-session"] !== session
+          (req.headers["x-discord-bot-kit-session"] ??
+            req.headers["x-guildwright-session"]) !== session
         ) {
           res.writeHead(403);
           res.end(JSON.stringify({ error: "Session token required" }));
@@ -248,14 +249,14 @@ export async function servePlayground(
         if (path === "/api/evidence" && req.method === "GET") {
           res.setHeader(
             "Content-Disposition",
-            'attachment; filename="guildwright-evidence.json"',
+            'attachment; filename="discord-bot-kit-evidence.json"',
           );
           res.end(
             JSON.stringify(
               {
-                format: "guildwright.session",
+                format: "discord-bot-kit.session",
                 version: 1,
-                toolVersion: "0.2.0",
+                toolVersion: "0.2.1",
                 bot: { name: bot.name, fingerprint: botFingerprint(bot) },
                 createdAt: new Date().toISOString(),
                 initialState,

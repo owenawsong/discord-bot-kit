@@ -1,0 +1,39 @@
+{
+  "environment": "local-simulation",
+  "rows": [
+    {
+      "actor": "Mira",
+      "interaction": "ticket:create",
+      "kind": "modal",
+      "outcome": "Acknowledged",
+      "ticketState": "open",
+      "events": [
+        "defer",
+        "effect",
+        "edit"
+      ]
+    },
+    {
+      "actor": "Rowan",
+      "interaction": "ticket:close:ticket-1",
+      "kind": "button",
+      "outcome": "GW_PERMISSION_DENIED",
+      "ticketState": "open",
+      "events": [
+        "reply"
+      ]
+    },
+    {
+      "actor": "Alex",
+      "interaction": "ticket:close:ticket-1",
+      "kind": "button",
+      "outcome": "Acknowledged",
+      "ticketState": "closed",
+      "events": [
+        "defer",
+        "effect",
+        "edit"
+      ]
+    }
+  ]
+}

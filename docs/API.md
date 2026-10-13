@@ -3,7 +3,7 @@
 ## Shared handler contract
 
 ```js
-import { defineBot } from "@owenawsong/guildwright";
+import { defineBot } from "@owenawsong/discord-bot-kit";
 export default defineBot({
   name: "My bot",
   commands: [
@@ -66,9 +66,9 @@ Embeds support title/description/color/URL, fields, footer, author, thumbnail, i
 }
 ```
 
-Run `npm exec -- guildwright test --bot bot.mjs --scenario greeting.json --json`. Every scenario uses a fresh simulator; steps share that scenario's state. Inputs may include `args` with typed primitive values. Supported assertions: `code`, `event` lifecycle type, `contentIncludes`, `ticketCount`, `ticketStatus`, `eventCount`, `eventId`, `eventStatus`, `participantCount`, `clean`. Roster/status assertions address `eventId`, or the most recently created event if omitted. A failure returns the actual execution and exits nonzero. Assertions are deliberately explicit; the toolkit does not treat an AI judgment as a passing test.
+Run `npm exec -- discord-bot-kit test --bot bot.mjs --scenario greeting.json --json`. Every scenario uses a fresh simulator; steps share that scenario's state. Inputs may include `args` with typed primitive values. Supported assertions: `code`, `event` lifecycle type, `contentIncludes`, `ticketCount`, `ticketStatus`, `eventCount`, `eventId`, `eventStatus`, `participantCount`, `clean`. Roster/status assertions address `eventId`, or the most recently created event if omitted. A failure returns the actual execution and exits nonzero. Assertions are deliberately explicit; the toolkit does not treat an AI judgment as a passing test.
 
-`guildwright test` without a scenario runs the selected **bundled recipe suite** (11 tickets / 14 signups / 8 polls), not a generic test generator for arbitrary bots. `Bot.recipe` selects it. Custom bots use [advanced scenarios](SCENARIOS.md): captures, typed references, exact JSON-pointer assertions, parallel batches and fault fixtures. `--out` writes downloadable evidence; `replay --evidence` reruns it in isolation. `npm test` runs library tests including persistence, schemas, recovery and HTTP security.
+`discord-bot-kit test` without a scenario runs the selected **bundled recipe suite** (11 tickets / 14 signups / 8 polls), not a generic test generator for arbitrary bots. `Bot.recipe` selects it. Custom bots use [advanced scenarios](SCENARIOS.md): captures, typed references, exact JSON-pointer assertions, parallel batches and fault fixtures. `--out` writes downloadable evidence; `replay --evidence` reruns it in isolation. `npm test` runs library tests including persistence, schemas, recovery and HTTP security.
 
 ## Diagnostic codes
 
@@ -101,10 +101,10 @@ Run `npm exec -- guildwright test --bot bot.mjs --scenario greeting.json --json`
 ```json
 {
   "mcpServers": {
-    "guildwright": {
+    "discord-bot-kit": {
       "command": "node",
       "args": [
-        "/absolute/path/Guildwright/dist/src/cli.js",
+        "/absolute/path/discord-bot-kit/dist/src/cli.js",
         "mcp",
         "--bot",
         "/absolute/path/my-bot/bot.mjs"
@@ -118,7 +118,7 @@ Tools: `inspect_bot`, `simulate_interaction`, `run_recipe_scenarios`, `reset_sim
 
 ### Local HTTP contract
 
-All mutation endpoints require `X-Guildwright-Session`; no CORS is enabled. GET `/api/session` returns commands, routes, namespace contracts, current/initial state and history. POST `/api/run` accepts fixture actor name, interaction kind/name, typed args/fields/values, age, channel, DM and optional faults. POST `/api/autocomplete` adds option/focused value and returns choices/diagnostics. POST `/api/scenario` or `/api/test` with `{scenario}` runs a custom isolated report; `/api/test` with `{}` runs the recipe suite. GET `/api/evidence` exports a session without the session token. POST `/api/replay` with `{evidence}` restores its validated checkpoint and replays in fresh state, without changing the interactive session. POST `/api/reset` clears simulated state/history. [Evidence format and limits](SCENARIOS.md).
+All mutation endpoints require `X-Discord-Bot-Kit-Session`; no CORS is enabled. GET `/api/session` returns commands, routes, namespace contracts, current/initial state and history. POST `/api/run` accepts fixture actor name, interaction kind/name, typed args/fields/values, age, channel, DM and optional faults. POST `/api/autocomplete` adds option/focused value and returns choices/diagnostics. POST `/api/scenario` or `/api/test` with `{scenario}` runs a custom isolated report; `/api/test` with `{}` runs the recipe suite. GET `/api/evidence` exports a session without the session token. POST `/api/replay` with `{evidence}` restores its validated checkpoint and replays in fresh state, without changing the interactive session. POST `/api/reset` clears simulated state/history. [Evidence format and limits](SCENARIOS.md).
 
 ## Local server boundary
 

@@ -17,6 +17,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      - run: npm run docs:demo
+      - run: git diff --exit-code -- assets/ticket-walkthrough.svg assets/ticket-walkthrough.json
+      - run: npm run check:release
       - run: node dist/src/cli.js test --json
       - run: node dist/src/cli.js test --recipe signups --json
       - run: node dist/src/cli.js test --recipe polls --json

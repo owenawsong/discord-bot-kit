@@ -4,7 +4,7 @@ Use this prompt with the coding agent you already have:
 
 > Read AGENTS.md. Inspect the bot. Add a /hello command that replies privately with “Welcome aboard.” Add a scenario that proves the response and checks that it acknowledges cleanly. Run the scenario and the ticket recipe checks. Open the workshop and inspect both desktop and mobile. Report the actual commands and results. Do not register commands or connect to Discord yet.
 
-The skill is in `skills/guildwright/SKILL.md`; `guildwright init` copies it into the bot as `AGENTS.md`, along with the state/scenario/API guides. For an existing project copy it into your agent's supported skill location, or link it from your own instructions. The tools work with any assistant capable of executing commands; there is no model subscription or API key for the workshop.
+The skill is in `skills/discord-bot-kit/SKILL.md`; `discord-bot-kit init` copies it into the bot as `AGENTS.md`, along with the state/scenario/API guides. For an existing project copy it into your agent's supported skill location, or link it from your own instructions. The tools work with any assistant capable of executing commands; there is no model subscription or API key for the workshop.
 
 ## Example progression
 

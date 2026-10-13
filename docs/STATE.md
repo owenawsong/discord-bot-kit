@@ -1,9 +1,9 @@
 # Versioned application state
 
-Guildwright supports your bot's domain data through registered JSON namespaces. Tickets and signups keep their existing v0.1 schema; new features can declare state without modifying the toolkit.
+Discord Bot Kit supports your bot's domain data through registered JSON namespaces. Tickets and signups keep their existing v0.1 schema; new features can declare state without modifying the toolkit.
 
 ```js
-import { defineBot, defineNamespace } from "@owenawsong/guildwright";
+import { defineBot, defineNamespace } from "@owenawsong/discord-bot-kit";
 
 const counter = defineNamespace({
   name: "counter",
@@ -66,4 +66,4 @@ Never perform network effects inside a state transaction. Reserve state, perform
 
 ## Inspect and recover
 
-`guildwright doctor --bot bot.mjs --local` validates the bot, command manifest and existing state without Discord credentials. `guildwright inspect --bot bot.mjs` returns contracts and a suggested next action. Preserve corrupt state for inspection; do not delete it to make a test pass. State may contain personal IDs, topics or votes; keep the live file and session evidence private.
+`discord-bot-kit doctor --bot bot.mjs --local` validates the bot, command manifest and existing state without Discord credentials. `discord-bot-kit inspect --bot bot.mjs` returns contracts and a suggested next action. Preserve corrupt state for inspection; do not delete it to make a test pass. State may contain personal IDs, topics or votes; keep the live file and session evidence private.

@@ -17,7 +17,7 @@ test("all signup recipe checks pass", async () => {
   );
 });
 test("signup roster survives restart and old button IDs still resolve", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "guildwright-events-"));
+  const dir = await mkdtemp(join(tmpdir(), "discord-bot-kit-events-"));
   try {
     const path = join(dir, "state.json");
     const store = new Store(path);
@@ -45,7 +45,7 @@ test("signup roster survives restart and old button IDs still resolve", async ()
   }
 });
 test("older ticket-only v1 state migrates without losing tickets", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "guildwright-migrate-"));
+  const dir = await mkdtemp(join(tmpdir(), "discord-bot-kit-migrate-"));
   try {
     const path = join(dir, "state.json");
     await writeFile(

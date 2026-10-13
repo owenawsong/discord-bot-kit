@@ -11,3 +11,4 @@ export * from "./namespaces.js";
 export * from "./messages.js";
 export * from "./autocomplete.js";
 export * from "./polls.js";
+export { VERSION } from "./identity.js";

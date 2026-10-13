@@ -413,9 +413,9 @@ export async function runScenario(bot: Bot, scenario: Scenario) {
       throw new Error("Scenario exceeds 500 interactions");
   }
   return {
-    format: "guildwright.scenario",
+    format: "discord-bot-kit.scenario",
     version: 1,
-    toolVersion: "0.2.0",
+    toolVersion: "0.2.1",
     name: scenario.name,
     passed: steps.every((s) => s.passed) && batches.every((b) => b.passed),
     steps: steps.map((s) => ({
@@ -446,17 +446,25 @@ export async function replayEvidence(bot: Bot, value: unknown) {
     throw new Error("Evidence must be an object");
   if (
     evidence.format !== undefined &&
-    (!["guildwright.session", "guildwright.scenario"].includes(
-      evidence.format,
-    ) ||
+    (![
+      "discord-bot-kit.session",
+      "discord-bot-kit.scenario",
+      "guildwright.session",
+      "guildwright.scenario",
+    ].includes(evidence.format) ||
       evidence.version !== 1)
   )
-    throw new Error("Unsupported Guildwright evidence format/version");
+    throw new Error("Unsupported Discord Bot Kit evidence format/version");
   const fingerprints = {
     sourceFingerprint: evidence.bot?.fingerprint,
     currentFingerprint: botFingerprint(bot),
   };
-  if (evidence.format === "guildwright.scenario" && evidence.scenario)
+  if (
+    ["discord-bot-kit.scenario", "guildwright.scenario"].includes(
+      evidence.format ?? "",
+    ) &&
+    evidence.scenario
+  )
     return {
       ...(await runScenario(bot, evidence.scenario)),
       environment: "isolated-scenario-replay",

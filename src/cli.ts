@@ -19,6 +19,7 @@ import { defineBot } from "./core.js";
 import type { Bot } from "./types.js";
 import { Simulator } from "./simulate.js";
 import { Store } from "./store.js";
+import { defaultStatePath, VERSION } from "./identity.js";
 const args = process.argv.slice(2);
 const command = args[0] ?? "help";
 function option(name: string) {
@@ -71,19 +72,19 @@ async function scaffold(destination: string) {
     JSON.stringify(
       {
         name: "my-discord-bot",
-        version: "0.2.0",
+        version: VERSION,
         private: true,
         type: "module",
         scripts: {
-          playground: "guildwright playground --bot bot.mjs",
-          test: "guildwright test --bot bot.mjs --scenario scenario.json",
-          "test:recipe": "guildwright test --bot bot.mjs",
-          doctor: "guildwright doctor --bot bot.mjs",
-          register: "guildwright register --bot bot.mjs",
-          start: "guildwright start --bot bot.mjs",
+          playground: "discord-bot-kit playground --bot bot.mjs",
+          test: "discord-bot-kit test --bot bot.mjs --scenario scenario.json",
+          "test:recipe": "discord-bot-kit test --bot bot.mjs",
+          doctor: "discord-bot-kit doctor --bot bot.mjs",
+          register: "discord-bot-kit register --bot bot.mjs",
+          start: "discord-bot-kit start --bot bot.mjs",
         },
         dependencies: {
-          "@owenawsong/guildwright":
+          "@owenawsong/discord-bot-kit":
             option("--package") ?? `file:${root.replaceAll("\\", "/")}`,
         },
       },
@@ -99,24 +100,24 @@ async function scaffold(destination: string) {
         : "ticketBot";
   await writeFile(
     join(target, "bot.mjs"),
-    `import { ${factory} } from '@owenawsong/guildwright';\n\n// These same handlers run in the workshop and Discord.\nconst bot = ${factory}();\nbot.name = 'My ${selectedRecipe === "signups" ? "event" : selectedRecipe === "polls" ? "poll" : "support"} bot';\nexport default bot;\n`,
+    `import { ${factory} } from '@owenawsong/discord-bot-kit';\n\n// These same handlers run in the workshop and Discord.\nconst bot = ${factory}();\nbot.name = 'My ${selectedRecipe === "signups" ? "event" : selectedRecipe === "polls" ? "poll" : "support"} bot';\nexport default bot;\n`,
   );
   await writeFile(
     join(target, ".env.example"),
     "DISCORD_TOKEN=\nDISCORD_APPLICATION_ID=\nDISCORD_GUILD_ID=\n" +
       (selectedRecipe === "tickets" ? "DISCORD_SUPPORT_ROLE_ID=\n" : "") +
-      "GUILDWRIGHT_STATE=.guildwright/live-state.json\n",
+      "DISCORD_BOT_KIT_STATE=.discord-bot-kit/live-state.json\n",
   );
   await writeFile(
     join(target, ".gitignore"),
-    "node_modules/\n.env\n.guildwright/\n",
+    "node_modules/\n.env\n.discord-bot-kit/\n.guildwright/\n",
   );
   await cp(
     join(root, `examples/${selectedRecipe}/scenario.json`),
     join(target, "scenario.json"),
   );
   await cp(
-    join(root, "skills/guildwright/SKILL.md"),
+    join(root, "skills/discord-bot-kit/SKILL.md"),
     join(target, "AGENTS.md"),
   );
   await cp(
@@ -133,9 +134,10 @@ async function scaffold(destination: string) {
   );
 }
 try {
-  if (command === "init") {
+  if (["--version", "-v"].includes(command)) console.log(VERSION);
+  else if (command === "init") {
     if (!args[1] || args[1].startsWith("--"))
-      throw new Error("Usage: guildwright init <new-directory>");
+      throw new Error("Usage: discord-bot-kit init <new-directory>");
     await scaffold(args[1]);
   } else if (command === "playground") {
     const port = Number(option("--port") ?? 18874);
@@ -147,7 +149,7 @@ try {
     });
     const address = server.address();
     console.log(
-      `Guildwright workshop: http://127.0.0.1:${typeof address === "object" && address ? address.port : port}/\nLocal simulation only. Ctrl+C to stop.`,
+      `Discord Bot Kit workshop: http://127.0.0.1:${typeof address === "object" && address ? address.port : port}/\nLocal simulation only. Ctrl+C to stop.`,
     );
   } else if (command === "test") {
     const bot = await loadBot();
@@ -213,7 +215,9 @@ try {
   } else if (command === "simulate") {
     const path = option("--input");
     if (!path)
-      throw new Error("Usage: guildwright simulate --input interaction.json");
+      throw new Error(
+        "Usage: discord-bot-kit simulate --input interaction.json",
+      );
     const value = JSON.parse(await readFile(resolve(path), "utf8"));
     console.log(
       JSON.stringify(await new Simulator(await loadBot()).run(value), null, 2),
@@ -221,7 +225,7 @@ try {
   } else if (command === "replay") {
     const path = option("--evidence");
     if (!path)
-      throw new Error("Usage: guildwright replay --evidence evidence.json");
+      throw new Error("Usage: discord-bot-kit replay --evidence evidence.json");
     const result = await replayEvidence(
       await loadBot(),
       JSON.parse(await readFile(resolve(path), "utf8")),
@@ -239,11 +243,7 @@ try {
     try {
       const bot = await loadBot();
       commandManifest(bot);
-      const store = new Store(
-        option("--state") ??
-          process.env.GUILDWRIGHT_STATE ??
-          ".guildwright/live-state.json",
-      );
+      const store = new Store(option("--state") ?? defaultStatePath());
       store.configure(bot.stateSchemas);
       await store.load();
       if (!args.includes("--local"))
@@ -305,12 +305,12 @@ try {
     process.once("SIGTERM", stop);
   } else if (command === "help")
     console.log(
-      `Guildwright · build with an agent, prove it locally\n\ninit <dir>       Scaffold a bot [--recipe tickets|signups|polls]\nplayground       Interactive local workshop [--port 18874] [--state path]\ninspect          Command manifest and component routes\ntest             Recipe checks or custom scenario [--scenario path] [--json] [--out file]\nsimulate         Run an Input JSON file [--input path]\nreplay           Isolated replay [--evidence evidence.json]\nmcp              Local stdio MCP server\ndoctor           Offline contract/state/config checks [--local]\nregister         Preview registration [--apply to replace guild commands]\nstart            Connect to Discord using .env\n\nUse --bot path/to/bot.mjs for your own Bot export, or --recipe tickets|signups|polls.\nNode 22.12+ · docs/DISCORD_SETUP.md for real-server setup.`,
+      `Discord Bot Kit · build with an agent, prove it locally\n\ninit <dir>       Scaffold a bot [--recipe tickets|signups|polls]\nplayground       Interactive local workshop [--port 18874] [--state path]\ninspect          Command manifest and component routes\ntest             Recipe checks or custom scenario [--scenario path] [--json] [--out file]\nsimulate         Run an Input JSON file [--input path]\nreplay           Isolated replay [--evidence evidence.json]\nmcp              Local stdio MCP server\ndoctor           Offline contract/state/config checks [--local]\nregister         Preview registration [--apply to replace guild commands]\nstart            Connect to Discord using .env\n\nUse --bot path/to/bot.mjs for your own Bot export, or --recipe tickets|signups|polls.\nNode 22.12+ · docs/DISCORD_SETUP.md for real-server setup.`,
     );
-  else throw new Error(`Unknown command ${command}. Run guildwright help.`);
+  else throw new Error(`Unknown command ${command}. Run discord-bot-kit help.`);
 } catch (e) {
   console.error(
-    `Guildwright: ${e instanceof Error ? e.message : "Operation failed"}`,
+    `Discord Bot Kit: ${e instanceof Error ? e.message : "Operation failed"}`,
   );
   process.exitCode = 1;
 }

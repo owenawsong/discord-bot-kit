@@ -24,7 +24,7 @@ test("bundled adversarial ticket scenarios all pass", async () => {
   );
 });
 test("state survives a new store and continues ticket numbering", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "guildwright-"));
+  const dir = await mkdtemp(join(tmpdir(), "discord-bot-kit-"));
   try {
     const path = join(dir, "state.json");
     const store = new Store(path);
@@ -46,7 +46,7 @@ test("state survives a new store and continues ticket numbering", async () => {
   }
 });
 test("corrupt state is rejected without overwriting evidence", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "guildwright-"));
+  const dir = await mkdtemp(join(tmpdir(), "discord-bot-kit-"));
   try {
     const path = join(dir, "state.json");
     await writeFile(path, '{"version":2}');

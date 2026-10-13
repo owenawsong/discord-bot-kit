@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 test("MCP custom scenario paths cannot escape through traversal or directory links", async () => {
-  const workspace = await mkdtemp(join(tmpdir(), "guildwright-mcp-"));
+  const workspace = await mkdtemp(join(tmpdir(), "discord-bot-kit-mcp-"));
   const project = join(workspace, "project"),
     outside = join(workspace, "outside");
   await mkdir(project);
@@ -131,7 +131,7 @@ test("stdio MCP handshake and local tools return structured evidence", async () 
       .split("\n")
       .map((line) => JSON.parse(line));
     assert.equal(messages.length, 4);
-    assert.equal(messages[0].result.serverInfo.name, "guildwright");
+    assert.equal(messages[0].result.serverInfo.name, "discord-bot-kit");
     assert.equal(messages[1].result.tools.length, 7);
     const evidence = JSON.parse(messages[2].result.content[0].text);
     assert.equal(evidence.events[0].type, "reply");

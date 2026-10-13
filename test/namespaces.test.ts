@@ -79,7 +79,7 @@ test("retained transaction drafts and returned results cannot mutate committed s
   assert.equal(store.snapshot().nextTicket, 1);
 });
 test("durable namespaces restore after restart and unknown schema versions preserve the file", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "guildwright-namespace-"));
+  const dir = await mkdtemp(join(tmpdir(), "discord-bot-kit-namespace-"));
   try {
     const path = join(dir, "state.json");
     const store = new Store(path);

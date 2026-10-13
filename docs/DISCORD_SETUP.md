@@ -1,12 +1,12 @@
 # From local workshop to a test guild
 
-Guildwright's local workshop needs no Discord application or credentials. The live adapter uses discord.js, the Guilds gateway intent and your own application. It does not request Message Content or Guild Members privileged intents.
+Discord Bot Kit's local workshop needs no Discord application or credentials. The live adapter uses discord.js, the Guilds gateway intent and your own application. It does not request Message Content or Guild Members privileged intents.
 
 ## 1. Create and install an application
 
 Use the [Discord Developer Portal](https://discord.com/developers/applications). Create an application and a bot; store the bot token only in the local `.env`. Install the application into a server you control using the `bot` and `applications.commands` scopes. Choose a dedicated test guild first.
 
-For the ticket recipe grant View Channel, Send Messages, Read Message History, Manage Channels and Manage Roles (needed to edit ticket permission overwrites on closure). Do not grant Administrator. Create a dedicated support role for people who should see tickets; **never use @everyone**, whose role ID equals the guild ID. Guildwright rejects that configuration. Record the application ID, guild ID and support role ID with Developer Mode's Copy ID actions.
+For the ticket recipe grant View Channel, Send Messages, Read Message History, Manage Channels and Manage Roles (needed to edit ticket permission overwrites on closure). Do not grant Administrator. Create a dedicated support role for people who should see tickets; **never use @everyone**, whose role ID equals the guild ID. Discord Bot Kit rejects that configuration. Record the application ID, guild ID and support role ID with Developer Mode's Copy ID actions.
 
 The signup recipe only needs View Channel and Send Messages for interaction messages. It does not create channels or edit permission overwrites and does not require a support-role ID. The caller creating/closing managed events uses Manage Guild; the bot does not need that permission to perform those checks.
 
@@ -21,10 +21,10 @@ DISCORD_TOKEN=your-local-token
 DISCORD_APPLICATION_ID=your-application-id
 DISCORD_GUILD_ID=your-test-guild-id
 DISCORD_SUPPORT_ROLE_ID=your-support-role-id
-GUILDWRIGHT_STATE=.guildwright/live-state.json
+DISCORD_BOT_KIT_STATE=.discord-bot-kit/live-state.json
 ```
 
-`guildwright doctor` validates required values and identifier formats offline. It cannot validate the token, role, guild membership or effective channel permissions. Never commit `.env`, send a token in a bug report, or put it in browser JavaScript.
+`discord-bot-kit doctor` validates required values and identifier formats offline. It cannot validate the token, role, guild membership or effective channel permissions. Never commit `.env`, send a token in a bug report, or put it in browser JavaScript.
 
 ## 3. Preview and register commands
 
@@ -34,7 +34,7 @@ npm run register
 npm run register -- --apply
 ```
 
-Applying performs a bulk overwrite of this application's guild commands. It can remove other commands owned by the same application in that guild. Guildwright does not register globally in v0.1.
+Applying performs a bulk overwrite of this application's guild commands. It can remove other commands owned by the same application in that guild. Discord Bot Kit registers only to the configured test guild.
 
 ## 4. Start and verify
 
@@ -52,7 +52,7 @@ Restart the bot and verify `/status`. Components are routed by current durable s
 
 The file store atomically commits JSON using a temporary file and rename. Transactions serialize within one process. Run **one bot process per state file** and keep the state on durable local storage. Multiple containers, network filesystems, replicas and distributed locking are outside this store's guarantees; use a transactional database port before scaling.
 
-Before channel creation the bot persists a `provisioning` reservation. If Discord creation times out after potentially succeeding, another interaction cannot create a duplicate ticket. At startup the adapter fetches channels and matches the complete Guildwright topic marker. A single match is adopted; missing or duplicate matches remain paused for operator inspection. Do not remove a reservation until you have checked the remote server for an orphaned channel. Treat markers as operational metadata, not a security boundary; people with Manage Channels can change them.
+Before channel creation the bot persists a `provisioning` reservation. If Discord creation times out after potentially succeeding, another interaction cannot create a duplicate ticket. At startup the adapter fetches channels and matches the complete Discord Bot Kit topic marker. A single match is adopted; missing or duplicate matches remain paused for operator inspection. Do not remove a reservation until you have checked the remote server for an orphaned channel. Treat markers as operational metadata, not a security boundary; people with Manage Channels can change them.
 
 ## Event signup integration
 
@@ -73,4 +73,4 @@ State contains user IDs and ticket topics. Set a retention policy and restrict a
 - Repeated clicks, missing/deleted channels and modified channel topics.
 - Registration changes and graceful shutdown.
 
-Official references: [Interactions](https://docs.discord.com/developers/interactions/receiving-and-responding), [permissions](https://docs.discord.com/developers/topics/permissions), [rate limits](https://docs.discord.com/developers/topics/rate-limits). discord.js manages REST rate limits; Guildwright does not guess fixed retry intervals.
+Official references: [Interactions](https://docs.discord.com/developers/interactions/receiving-and-responding), [permissions](https://docs.discord.com/developers/topics/permissions), [rate limits](https://docs.discord.com/developers/topics/rate-limits). discord.js manages REST rate limits; Discord Bot Kit does not guess fixed retry intervals.

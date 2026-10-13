@@ -50,7 +50,7 @@ test("bounded session history advances its replay checkpoint and serializes inte
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "X-Guildwright-Session": session.session,
+              "X-Discord-Bot-Kit-Session": session.session,
             },
             body: JSON.stringify({ name: "count" }),
           }),
@@ -114,7 +114,7 @@ test("local API protects mutations and runs real handlers", async () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-Guildwright-Session": session.session,
+            "X-Discord-Bot-Kit-Session": session.session,
             Origin: "https://untrusted.example",
           },
           body: "{}",
@@ -127,7 +127,7 @@ test("local API protects mutations and runs real handlers", async () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Guildwright-Session": session.session,
+          "X-Discord-Bot-Kit-Session": session.session,
         },
         body: JSON.stringify({ name: "ping" }),
       })
@@ -139,7 +139,7 @@ test("local API protects mutations and runs real handlers", async () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-Guildwright-Session": session.session,
+            "X-Discord-Bot-Kit-Session": session.session,
           },
           body: JSON.stringify({ name: "x", actor: "attacker" }),
         })
@@ -166,7 +166,7 @@ test("custom scenario, autocomplete, evidence and replay are isolated from the i
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Guildwright-Session": session.session,
+          "X-Discord-Bot-Kit-Session": session.session,
         },
         body: JSON.stringify(data),
       });
@@ -201,7 +201,7 @@ test("custom scenario, autocomplete, evidence and replay are isolated from the i
     assert.equal(suggestions.choices[0].value, "poll-1");
     const evidence = (await (await fetch(url + "/api/evidence")).json()) as any;
     assert.equal(evidence.session, undefined);
-    assert.equal(evidence.format, "guildwright.session");
+    assert.equal(evidence.format, "discord-bot-kit.session");
     assert.equal(evidence.executions.length, 1);
     const replay = (await (
       await request("replay", { evidence })
@@ -237,7 +237,7 @@ test("signup HTTP arguments reach shared handlers and reset clears event state",
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Guildwright-Session": session.session,
+          "X-Discord-Bot-Kit-Session": session.session,
         },
         body: JSON.stringify(data),
       });

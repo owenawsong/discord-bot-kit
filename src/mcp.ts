@@ -202,7 +202,7 @@ export function startMcp(bot: Bot, options: { scenarioRoot?: string } = {}) {
             result = {
               protocolVersion: "2024-11-05",
               capabilities: { tools: {} },
-              serverInfo: { name: "guildwright", version: "0.2.0" },
+              serverInfo: { name: "discord-bot-kit", version: "0.2.1" },
             };
           else if (req.method === "ping") result = {};
           else if (req.method === "tools/list") result = { tools };

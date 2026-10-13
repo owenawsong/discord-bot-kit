@@ -1,2 +1,2 @@
-import { pollBot } from "@owenawsong/guildwright";
+import { pollBot } from "@owenawsong/discord-bot-kit";
 export default pollBot();

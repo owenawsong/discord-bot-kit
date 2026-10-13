@@ -5,13 +5,13 @@ Verified locally on Windows with Node 24.13.0. CI is configured for Node 22/24 o
 | Check                                                     | Outcome                                                                                                                                         |
 | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | TypeScript build                                          | Passed                                                                                                                                          |
-| Library tests                                             | 65 passed, 0 failed                                                                                                                             |
+| Library tests                                             | 68 passed, 0 failed                                                                                                                             |
 | Bundled ticket scenarios                                  | 11 passed, 0 failed                                                                                                                             |
 | Bundled signup scenarios                                  | 14 passed, 0 failed                                                                                                                             |
 | Bundled poll scenarios                                    | 8 passed, 0 failed                                                                                                                              |
 | npm dependency audit                                      | 0 reported vulnerabilities at preparation time                                                                                                  |
 | Packed install into new v0.2 ticket/signup/poll scaffolds | All matching scenarios and bundled recipe checks passed; poll local doctor/registration preview passed                                          |
-| Browser slash → modal → ticket                            | Passed with actual handler output                                                                                                               |
+| Browser slash â†’ modal â†’ ticket                            | Passed with actual handler output                                                                                                               |
 | Browser unauthorized close                                | GW_PERMISSION_DENIED; ticket remained open                                                                                                      |
 | Browser moderator close                                   | Ticket changed to closed                                                                                                                        |
 | Browser scenario tab                                      | 11/11 passed                                                                                                                                    |
@@ -29,6 +29,6 @@ Verified locally on Windows with Node 24.13.0. CI is configured for Node 22/24 o
 | Autocomplete                                              | Permission, constraint, guild scope, expired/slow response and copied-state behavior passed                                                     |
 | Live Discord integration                                  | Not performed; requires an authenticated test guild                                                                                             |
 
-`assets/scenarios.png` is an actual BrowserOS capture of the local scenario runner. Browser screenshots were intermittent; no mock screenshot was substituted. The workshop server uses loopback and contains only simulated fixtures.
+`assets/ticket-walkthrough.svg` illustrates actual handler executions, reproduced by `npm run docs:demo`; the figure links to its exact values. Legacy PNGs retain captures from the previous workspace. The workshop server uses loopback and contains only simulated fixtures.
 
 This evidence validates the listed local behavior. It does not establish Discord API fidelity, production readiness, cross-machine browser compatibility or performance at scale. See the live test procedure and explicit limits in the README.

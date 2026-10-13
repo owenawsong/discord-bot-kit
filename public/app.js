@@ -24,6 +24,7 @@ async function api(path, data) {
         ? {}
         : {
             "Content-Type": "application/json",
+            "X-Discord-Bot-Kit-Session": session,
             "X-Guildwright-Session": session,
           },
     body: data === undefined ? undefined : JSON.stringify(data),
@@ -825,7 +826,10 @@ $("import-scenario").onchange = async (e) => {
 };
 $("save-scenario").onclick = () => {
   try {
-    download("guildwright-scenario.json", JSON.parse($("scenario-json").value));
+    download(
+      "discord-bot-kit-scenario.json",
+      JSON.parse($("scenario-json").value),
+    );
   } catch (e) {
     $("scenario-error").textContent = e.message;
   }
@@ -860,7 +864,7 @@ $("import-evidence").onchange = async (e) => {
 $("export").onclick = async () => {
   try {
     const value = await api("evidence");
-    download("guildwright-evidence.json", value);
+    download("discord-bot-kit-evidence.json", value);
   } catch (e) {
     status(
       "Session export failed: " +
@@ -870,7 +874,7 @@ $("export").onclick = async () => {
   }
 };
 $("export-contract").onclick = () =>
-  download("guildwright-contract.json", {
+  download("discord-bot-kit-contract.json", {
     bot: botName,
     commands,
     routes: contract.routes,

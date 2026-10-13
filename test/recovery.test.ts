@@ -28,7 +28,7 @@ test("recovery specifies historical member overwrite type and continues after a 
       {
         id: "channel-2",
         type: ChannelType.GuildText,
-        topic: "guildwright:guild:ticket-2:uncached-owner-2",
+        topic: "discord-bot-kit:guild:ticket-2:uncached-owner-2",
         permissionOverwrites: {
           edit: async (_owner: string, _values: unknown, opts: unknown) => {
             options = opts;

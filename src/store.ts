@@ -43,7 +43,7 @@ export function validateState(value: unknown): asserts value is State {
     s.nextTicket < 1
   )
     throw new Error(
-      "Unsupported or corrupted Guildwright state. Preserve the file and inspect it; it will not be overwritten.",
+      "Unsupported or corrupted Discord Bot Kit state. Preserve the file and inspect it; it will not be overwritten.",
     );
   const ids = new Set<string>();
   for (const t of s.tickets) {
@@ -205,7 +205,7 @@ export class Store {
         throw new StateFault(
           "GW_STATE_VERSION",
           `${name} has stored schema version ${entry.version}; expected ${schema.version}.`,
-          "Back up the state and migrate it explicitly; Guildwright will not overwrite unknown schema versions.",
+          "Back up the state and migrate it explicitly; Discord Bot Kit will not overwrite unknown schema versions.",
         );
       if (entry.global !== undefined) validateNamespace(schema, entry.global);
       for (const value of Object.values(entry.guilds))

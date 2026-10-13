@@ -1,12 +1,13 @@
 {
-  "name": "@owenawsong/guildwright",
-  "version": "0.2.0",
-  "description": "A local workshop for coding agents that build Discord bots: simulate, diagnose, test, then deploy.",
+  "name": "@owenawsong/discord-bot-kit",
+  "version": "0.2.1",
+  "description": "Build and test Discord bots locally with reusable recipes, state inspection, scenarios and agent tools.",
   "type": "module",
   "engines": {
     "node": ">=22.12"
   },
   "bin": {
+    "discord-bot-kit": "dist/src/cli.js",
     "guildwright": "dist/src/cli.js"
   },
   "exports": {
@@ -21,6 +22,7 @@
     "skills",
     "docs",
     "assets",
+    "scripts",
     "examples",
     "LICENSE",
     "README.md",
@@ -32,6 +34,8 @@
     "build": "tsc",
     "test": "npm run build && node --test dist/test/*.test.js",
     "dev": "npm run build && node dist/src/cli.js playground",
+    "docs:demo": "npm run build && node scripts/build-readme-demo.mjs",
+    "check:release": "node scripts/check-release.mjs",
     "check": "npm run test && node dist/src/cli.js test --json && node dist/src/cli.js test --recipe signups --json && node dist/src/cli.js test --recipe polls --json",
     "prepack": "npm run build"
   },
@@ -43,8 +47,19 @@
     "typescript": "^5.9.2"
   },
   "license": "MIT",
+  "keywords": [
+    "discord",
+    "discord-bot",
+    "discordjs",
+    "bot-development",
+    "mcp",
+    "coding-agents",
+    "testing",
+    "simulation"
+  ],
+  "author": "Owen Song",
   "repository": {
     "type": "git",
-    "url": "https://github.com/owenawsong/Guildwright.git"
+    "url": "https://github.com/owenawsong/discord-bot-kit.git"
   }
 }

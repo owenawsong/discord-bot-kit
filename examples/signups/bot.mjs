@@ -1,2 +1,2 @@
-import { signupBot } from "@owenawsong/guildwright";
+import { signupBot } from "@owenawsong/discord-bot-kit";
 export default signupBot();
